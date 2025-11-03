@@ -179,6 +179,10 @@ xcopy /y /d "$(ProjectDir)lib\x64\SOIL\*.dll" "$(OutDir)" &amp;</Command>
   <ItemGroup>
     <ClCompile Include="include\glm\detail\glm.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="src\Engine\App.cpp" />
+    <ClCompile Include="src\Engine\Renderer\Renderer.cpp" />
+    <ClCompile Include="src\Engine\Renderer\Shader.cpp" />
+    <ClCompile Include="src\Engine\Window.cpp" />
     <ClCompile Include="src\glad.c" />
     <ClCompile Include="src\Util\imageloader.cpp" />
     <ClCompile Include="src\Util\loadShaders.cpp" />
@@ -479,6 +483,10 @@ xcopy /y /d "$(ProjectDir)lib\x64\SOIL\*.dll" "$(OutDir)" &amp;</Command>
     <ClInclude Include="include\GL\wglew.h" />
     <ClInclude Include="include\KHR\khrplatform.h" />
     <ClInclude Include="include\SOIL.h" />
+    <ClInclude Include="src\Engine\App.h" />
+    <ClInclude Include="src\Engine\Renderer\Renderer.h" />
+    <ClInclude Include="src\Engine\Renderer\Shader.h" />
+    <ClInclude Include="src\Engine\Window.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="include\glm\CMakeLists.txt" />
@@ -648,12 +656,9 @@ xcopy /y /d "$(ProjectDir)lib\x64\SOIL\*.dll" "$(OutDir)" &amp;</Command>
   </ImportGroup>
   <Target Name="CopyShaders" AfterTargets="Build">
     <RemoveDir Directories="$(OutDir)shaders" />
-
     <ItemGroup>
       <ShaderFiles Include="$(ProjectDir)src\shaders\**\*.*" />
     </ItemGroup>
-
-    <Copy SourceFiles="@(ShaderFiles)"
-          DestinationFiles="@(ShaderFiles->'$(OutDir)shaders\%(RecursiveDir)%(Filename)%(Extension)')" />
+    <Copy SourceFiles="@(ShaderFiles)" DestinationFiles="@(ShaderFiles->'$(OutDir)shaders\%(RecursiveDir)%(Filename)%(Extension)')" />
   </Target>
 </Project>
