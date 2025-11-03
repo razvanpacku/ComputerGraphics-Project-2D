@@ -1,1 +1,1 @@
-# Project
+# Computer Graphics 2D Project - Boids
