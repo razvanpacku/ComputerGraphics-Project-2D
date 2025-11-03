@@ -1,14 +1,10 @@
-// Codul sursa este adaptat dupa OpenGLBook.com
-
-#include <windows.h>  // biblioteci care urmeaza sa fie incluse
-#include <stdlib.h> // necesare pentru citirea shader-elor
+#include <windows.h> 
+#include <stdlib.h>
 #include <stdio.h>
-#include <GL/glew.h> // glew apare inainte de freeglut
-#include <GL/freeglut.h> // nu trebuie uitat freeglut.h
-#include "loadShaders.h"
+#include <GL/glew.h>
+#include <GL/freeglut.h>
+#include "Util/loadShaders.h"
 
-
-//////////////////////////////////////
 
 GLuint
 VaoId,
@@ -19,7 +15,6 @@ ProgramId;
 
 void CreateVBO(void)
 {
-	// varfurile 
 	GLfloat Vertices[] = {
 		0.5f,  0.5f, 0.0f, 1.0f,
 		0.5f, -0.5f, 0.0f, 1.0f,
@@ -29,7 +24,6 @@ void CreateVBO(void)
 		0.5f,  0.5f, 0.0f, 1.0f
 	};
 
-	// culorile, ca atribute ale varfurilor
 	GLfloat Colors[] = {
 	  1.0f, 0.5f, 0.2f, 1.0f,
 	  1.0f, 0.5f, 0.2f, 1.0f,
@@ -39,26 +33,18 @@ void CreateVBO(void)
 	  1.0f, 0.5f, 0.2f, 1.0f,
 	};
 
-	// se creeaza un buffer nou
 	glGenBuffers(1, &VboId);
-	// este setat ca buffer curent
 	glBindBuffer(GL_ARRAY_BUFFER, VboId);
-	// varfurile sunt "copiate" in bufferul curent
 	glBufferData(GL_ARRAY_BUFFER, sizeof(Vertices), Vertices, GL_STATIC_DRAW);
 
-	// se creeaza / se leaga un VAO (Vertex Array Object) - util cand se utilizeaza mai multe VBO
 	glGenVertexArrays(1, &VaoId);
 	glBindVertexArray(VaoId);
-	// se activeaza lucrul cu atribute; atributul 0 = pozitie
 	glEnableVertexAttribArray(0);
-	// 
 	glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 0, 0);
 
-	// un nou buffer, pentru culoare
 	glGenBuffers(1, &ColorBufferId);
 	glBindBuffer(GL_ARRAY_BUFFER, ColorBufferId);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(Colors), Colors, GL_STATIC_DRAW);
-	// atributul 1 =  culoare
 	glEnableVertexAttribArray(1);
 	glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 0, 0);
 }
@@ -77,7 +63,7 @@ void DestroyVBO(void)
 
 void CreateShaders(void)
 {
-	ProgramId = LoadShaders("example.vert", "example.frag");
+	ProgramId = LoadShaders("shaders/base.vert", "shaders/base.frag");
 	glUseProgram(ProgramId);
 }
 void DestroyShaders(void)
@@ -87,7 +73,7 @@ void DestroyShaders(void)
 
 void Initialize(void)
 {
-	glClearColor(0.2f, 0.3f, 0.3f, 1.0f); // culoarea de fond a ecranului
+	glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 	CreateVBO();
 	CreateShaders();
 }
@@ -95,7 +81,6 @@ void RenderFunction(void)
 {
 	glClear(GL_COLOR_BUFFER_BIT);       
 
-	// Functiile de desenare
 	glDrawArrays(GL_TRIANGLES, 0, 3);
 	glDrawArrays(GL_TRIANGLES, 3, 3);
 
@@ -111,10 +96,10 @@ int main(int argc, char* argv[])
 {
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);
-	glutInitWindowPosition(100, 100); // pozitia initiala a ferestrei
-	glutInitWindowSize(600, 600); //dimensiunile ferestrei
-	glutCreateWindow("Grafica pe calculator - primul exemplu"); // titlul ferestrei
-	glewInit(); // nu uitati de initializare glew; trebuie initializat inainte de a a initializa desenarea
+	glutInitWindowPosition(100, 100);
+	glutInitWindowSize(600, 600); 
+	glutCreateWindow("Grafica pe calculator - primul exemplu"); 
+	glewInit(); 
 	Initialize();
 	glutDisplayFunc(RenderFunction);
 	glutCloseFunc(Cleanup);

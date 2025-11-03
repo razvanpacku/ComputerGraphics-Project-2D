@@ -49,9 +49,6 @@
     <Filter Include="Resource Files\shaders">
       <UniqueIdentifier>{6c213cb3-1d7b-4eb0-9aac-c49ae62cb4c3}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Resource Files\shaders\example">
-      <UniqueIdentifier>{d09f2fd9-6e60-4229-b42e-38b00996fa4c}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Header Files\template-built-ins">
       <UniqueIdentifier>{cd7f18ee-6be3-4aad-bf44-1ac29b4db1f9}</UniqueIdentifier>
     </Filter>
@@ -93,28 +90,22 @@
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\imageloader.cpp">
-      <Filter>Source Files\template-built-ins\Utils</Filter>
-    </ClCompile>
-    <ClCompile Include="src\loadShaders.cpp">
-      <Filter>Source Files\template-built-ins\Utils</Filter>
-    </ClCompile>
     <ClCompile Include="src\glad.c">
       <Filter>Source Files\template-built-ins\GLAD</Filter>
     </ClCompile>
     <ClCompile Include="include\glm\detail\glm.cpp">
       <Filter>Header Files\template-built-ins\glm\detail</Filter>
     </ClCompile>
+    <ClCompile Include="src\Util\imageloader.cpp">
+      <Filter>Source Files\template-built-ins\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Util\loadShaders.cpp">
+      <Filter>Source Files\template-built-ins\Utils</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\SOIL.h">
       <Filter>Header Files\template-built-ins\GL</Filter>
-    </ClInclude>
-    <ClInclude Include="include\imageloader.h">
-      <Filter>Header Files\template-built-ins\Utils</Filter>
-    </ClInclude>
-    <ClInclude Include="include\loadShaders.h">
-      <Filter>Header Files\template-built-ins\Utils</Filter>
     </ClInclude>
     <ClInclude Include="include\glad\glad.h">
       <Filter>Header Files\template-built-ins\GLAD</Filter>
@@ -1467,17 +1458,17 @@
     <None Include="include\glm\gtx\wrap.inl">
       <Filter>Header Files\template-built-ins\glm\gtx</Filter>
     </None>
-    <None Include="example.vert">
-      <Filter>Resource Files\shaders\example</Filter>
-    </None>
-    <None Include="example.frag">
-      <Filter>Resource Files\shaders\example</Filter>
-    </None>
     <None Include="lib\x64\GL\DLLs\freeglut.dll">
       <Filter>Resource Files\template-built-ins\DLLs\64b</Filter>
     </None>
     <None Include="lib\x64\GL\DLLs\glew32.dll">
       <Filter>Resource Files\template-built-ins\DLLs\64b</Filter>
+    </None>
+    <None Include="src\shaders\base.frag">
+      <Filter>Resource Files\shaders</Filter>
+    </None>
+    <None Include="src\shaders\base.vert">
+      <Filter>Resource Files\shaders</Filter>
     </None>
   </ItemGroup>
 </Project>
