@@ -1,13 +1,9 @@
 #include "./Renderer.h"
 
 //temporary functions for rendering, move to another file later
-GLuint Renderer::VboId = 0;
-GLuint Renderer::VaoId = 0;
-GLuint Renderer::ColorBufferId = 0;
-GLuint Renderer::ProgramId = 0;
 
 #include "Util/loadShaders.h"
-void CreateVBO(void)
+void Renderer::CreateVBO(void)
 {
 	GLfloat Vertices[] = {
 		0.5f,  0.5f, 0.0f, 1.0f,
@@ -27,42 +23,43 @@ void CreateVBO(void)
 	  1.0f, 0.5f, 0.2f, 1.0f,
 	};
 
-	glGenBuffers(1, &Renderer::VboId);
-	glBindBuffer(GL_ARRAY_BUFFER, Renderer::VboId);
+	glGenBuffers(1, &VboId);
+	glBindBuffer(GL_ARRAY_BUFFER, VboId);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(Vertices), Vertices, GL_STATIC_DRAW);
 
-	glGenVertexArrays(1, &Renderer::VaoId);
-	glBindVertexArray(Renderer::VaoId);
+	glGenVertexArrays(1, &VaoId);
+	glBindVertexArray(VaoId);
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 0, 0);
 
-	glGenBuffers(1, &Renderer::ColorBufferId);
-	glBindBuffer(GL_ARRAY_BUFFER, Renderer::ColorBufferId);
+	glGenBuffers(1, &ColorBufferId);
+	glBindBuffer(GL_ARRAY_BUFFER, ColorBufferId);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(Colors), Colors, GL_STATIC_DRAW);
 	glEnableVertexAttribArray(1);
 	glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 0, 0);
 }
-void DestroyVBO(void)
+void Renderer::DestroyVBO(void) const
 {
 	glDisableVertexAttribArray(1);
 	glDisableVertexAttribArray(0);
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glDeleteBuffers(1, &Renderer::ColorBufferId);
-	glDeleteBuffers(1, &Renderer::VboId);
+	glDeleteBuffers(1, &ColorBufferId);
+	glDeleteBuffers(1, &VboId);
 
 	glBindVertexArray(0);
-	glDeleteVertexArrays(1, &Renderer::VaoId);
+	glDeleteVertexArrays(1, &VaoId);
 }
 
-void CreateShaders(void)
+void Renderer::CreateShaders(void)
 {
-	Renderer::ProgramId = LoadShaders("shaders/base.vert", "shaders/base.frag");
-	glUseProgram(Renderer::ProgramId);
+	shader = new Shader("shaders/base.vert", "shaders/base.frag");
+	ProgramId = shader->GetID();
+	glUseProgram(ProgramId);
 }
-void DestroyShaders(void)
+void Renderer::DestroyShaders(void) const
 {
-	glDeleteProgram(Renderer::ProgramId);
+	glDeleteProgram(ProgramId);
 }
 
 Renderer::Renderer()
@@ -72,9 +69,10 @@ Renderer::Renderer()
 
 Renderer::~Renderer()
 {
+	delete shader;
 }
 
-void Renderer::Init() const
+void Renderer::Init()
 {
 	static Renderer* self = (Renderer*)this;
 
