@@ -180,8 +180,14 @@ xcopy /y /d "$(ProjectDir)lib\x64\SOIL\*.dll" "$(OutDir)" &amp;</Command>
     <ClCompile Include="include\glm\detail\glm.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="src\Engine\App.cpp" />
+    <ClCompile Include="src\Engine\Entity.cpp" />
+    <ClCompile Include="src\Engine\Renderer\Camera.cpp" />
+    <ClCompile Include="src\Engine\Renderer\Mesh.cpp" />
     <ClCompile Include="src\Engine\Renderer\Renderer.cpp" />
     <ClCompile Include="src\Engine\Renderer\Shader.cpp" />
+    <ClCompile Include="src\Engine\Renderer\Texture.cpp" />
+    <ClCompile Include="src\Engine\Renderer\TextureManager.cpp" />
+    <ClCompile Include="src\Engine\Scene.cpp" />
     <ClCompile Include="src\Engine\Window.cpp" />
     <ClCompile Include="src\glad.c" />
     <ClCompile Include="src\Util\imageloader.cpp" />
@@ -484,8 +490,14 @@ xcopy /y /d "$(ProjectDir)lib\x64\SOIL\*.dll" "$(OutDir)" &amp;</Command>
     <ClInclude Include="include\KHR\khrplatform.h" />
     <ClInclude Include="include\SOIL.h" />
     <ClInclude Include="src\Engine\App.h" />
+    <ClInclude Include="src\Engine\Entity.h" />
+    <ClInclude Include="src\Engine\Renderer\Camera.h" />
+    <ClInclude Include="src\Engine\Renderer\Mesh.h" />
     <ClInclude Include="src\Engine\Renderer\Renderer.h" />
     <ClInclude Include="src\Engine\Renderer\Shader.h" />
+    <ClInclude Include="src\Engine\Renderer\Texture.h" />
+    <ClInclude Include="src\Engine\Renderer\TextureManager.h" />
+    <ClInclude Include="src\Engine\Scene.h" />
     <ClInclude Include="src\Engine\Window.h" />
   </ItemGroup>
   <ItemGroup>
@@ -660,5 +672,12 @@ xcopy /y /d "$(ProjectDir)lib\x64\SOIL\*.dll" "$(OutDir)" &amp;</Command>
       <ShaderFiles Include="$(ProjectDir)src\shaders\**\*.*" />
     </ItemGroup>
     <Copy SourceFiles="@(ShaderFiles)" DestinationFiles="@(ShaderFiles->'$(OutDir)shaders\%(RecursiveDir)%(Filename)%(Extension)')" />
+  </Target>
+  <Target Name="CopyTextures" AfterTargets="Build">
+    <RemoveDir Directories="$(OutDir)textures" />
+    <ItemGroup>
+      <TextureFiles Include="$(ProjectDir)src\textures\**\*.*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(TextureFiles)" DestinationFiles="@(TextureFiles->'$(OutDir)textures\%(RecursiveDir)%(Filename)%(Extension)')" />
   </Target>
 </Project>

@@ -3,72 +3,25 @@
 //temporary functions for rendering, move to another file later
 
 #include "Util/loadShaders.h"
-void Renderer::CreateVBO(void)
-{
-	GLfloat Vertices[] = {
-		0.5f,  0.5f, 0.0f, 1.0f,
-		0.5f, -0.5f, 0.0f, 1.0f,
-		-0.5f, -0.5f, 0.0f, 1.0f,
-		-0.5f, -0.5f, 0.0f, 1.0f,
-		-0.5f,  0.5f, 0.0f, 1.0f,
-		0.5f,  0.5f, 0.0f, 1.0f
-	};
 
-	GLfloat Colors[] = {
-	  1.0f, 0.5f, 0.2f, 1.0f,
-	  1.0f, 0.5f, 0.2f, 1.0f,
-	  1.0f, 0.5f, 0.2f, 1.0f,
-	  1.0f, 0.5f, 0.2f, 1.0f,
-	  1.0f, 0.5f, 0.2f, 1.0f,
-	  1.0f, 0.5f, 0.2f, 1.0f,
-	};
-
-	glGenBuffers(1, &VboId);
-	glBindBuffer(GL_ARRAY_BUFFER, VboId);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(Vertices), Vertices, GL_STATIC_DRAW);
-
-	glGenVertexArrays(1, &VaoId);
-	glBindVertexArray(VaoId);
-	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 0, 0);
-
-	glGenBuffers(1, &ColorBufferId);
-	glBindBuffer(GL_ARRAY_BUFFER, ColorBufferId);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(Colors), Colors, GL_STATIC_DRAW);
-	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 0, 0);
-}
-void Renderer::DestroyVBO(void) const
-{
-	glDisableVertexAttribArray(1);
-	glDisableVertexAttribArray(0);
-
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glDeleteBuffers(1, &ColorBufferId);
-	glDeleteBuffers(1, &VboId);
-
-	glBindVertexArray(0);
-	glDeleteVertexArrays(1, &VaoId);
-}
+#include "../App.h"
 
 void Renderer::CreateShaders(void)
 {
 	shader = new Shader("shaders/base.vert", "shaders/base.frag");
-	ProgramId = shader->GetID();
-	glUseProgram(ProgramId);
-}
-void Renderer::DestroyShaders(void) const
-{
-	glDeleteProgram(ProgramId);
+	shader->Use();
 }
 
-Renderer::Renderer()
+Renderer::Renderer(App* app) : app(app)
 {
 	Init();
+
+	activeShader = shader;
 }
 
 Renderer::~Renderer()
 {
+	meshCache.clear();
 	delete shader;
 }
 
@@ -76,31 +29,102 @@ void Renderer::Init()
 {
 	static Renderer* self = (Renderer*)this;
 
-	glClearColor(DEFAULT_CLEAR_COLOR_R, DEFAULT_CLEAR_COLOR_G, DEFAULT_CLEAR_COLOR_B, 1.0f);
+	if (scene) {
+		glClearColor(scene->backgroundColor.r, scene->backgroundColor.g, scene->backgroundColor.b, 1.0f);
+	} else {
+		glClearColor(DEFAULT_CLEAR_COLOR_R, DEFAULT_CLEAR_COLOR_G, DEFAULT_CLEAR_COLOR_B, 1.0f);
+	}
 
 	glutDisplayFunc([]() {
+		self->Update();
 		self->Render();
+
+		glutSwapBuffers();
 		});
 	glutCloseFunc([]() {
 		self->Cleanup();
 		});
 
-	CreateVBO();
+	glutIdleFunc([]() {
+		glutPostRedisplay(); 
+		});
+
+	glutKeyboardFunc([](unsigned char key, int x, int y) {
+		if (key == 27) { // ESC key
+			glutLeaveMainLoop();
+		}
+		else if (key == 't') {
+			//track entity
+			self->app->SetEntityTracking();
+		}
+		});
+
+
+	glutMouseWheelFunc([](int wheel, int direction, int x, int y) {
+		self->camera->ProcessMouseScroll(direction);
+		});
+
 	CreateShaders();
 }
 
 void Renderer::Clear() const
 {
-	glClearColor(DEFAULT_CLEAR_COLOR_R, DEFAULT_CLEAR_COLOR_G, DEFAULT_CLEAR_COLOR_B, 1.0f);
+	if (scene) {
+		glClearColor(scene->backgroundColor.r, scene->backgroundColor.g, scene->backgroundColor.b, 1.0f);
+	}
+	else {
+		glClearColor(DEFAULT_CLEAR_COLOR_R, DEFAULT_CLEAR_COLOR_G, DEFAULT_CLEAR_COLOR_B, 1.0f);
+	}
 	glClear(GL_COLOR_BUFFER_BIT);
+}
+
+std::shared_ptr<Mesh> Renderer::AddMesh(const std::string& name, std::shared_ptr<Mesh> mesh)
+{
+	if (meshCache.find(name) == meshCache.end()) {
+		meshCache[name] = mesh;
+		return mesh;
+	}
+	return nullptr;
+}
+
+std::shared_ptr<Mesh> Renderer::GetMesh(const std::string& name) const
+{
+	auto it = meshCache.find(name);
+	if (it != meshCache.end()) {
+		return it->second;
+	}
+	return nullptr;
+}
+
+void Renderer::Update() const
+{
+	app->Update();
+}
+
+void Renderer::RenderEntity(const Entity& entity) const
+{
+	//set up shader uniforms here
+	activeShader->setMat4("model", entity.GetModelMatrix());
+	activeShader->setBool("useTexture", entity.useTexture);
+	//draw the entity
+	entity.Draw();
 }
 
 void Renderer::Render() const
 {
+	if (!camera || !scene) return;
+
 	Clear();
 
+	activeShader->Use();
+
+	glm::mat4 view = camera->GetViewMatrix();
+	glm::mat4 proj = camera->GetProjectionMatrix();
+	activeShader->setMat4("view", view);
+	activeShader->setMat4("projection", proj);
+
 	//do rendering here
-	glDrawArrays(GL_TRIANGLES, 0, 6);
+	scene->Render();
 
 	glFlush();
 }
@@ -108,6 +132,4 @@ void Renderer::Render() const
 void Renderer::Cleanup() const
 {
 	//cleanup resources here
-	DestroyShaders();
-	DestroyVBO();
 }

@@ -85,6 +85,18 @@
     <Filter Include="Header Files\template-built-ins\GL">
       <UniqueIdentifier>{663bdca5-1476-48d8-8b35-00bd1f0c790c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Engine">
+      <UniqueIdentifier>{9dc3aa4a-91fc-4dcc-b893-b324b9559012}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Engine\Renderer">
+      <UniqueIdentifier>{39241290-1555-42a5-8f29-36d3a8dfe79f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Engine">
+      <UniqueIdentifier>{f3722af9-ee53-4a6e-96c6-4311618c1e66}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Engine\Renderer">
+      <UniqueIdentifier>{b5359571-a515-43f4-83a2-09f97c38ada2}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -101,6 +113,36 @@
     </ClCompile>
     <ClCompile Include="src\Util\loadShaders.cpp">
       <Filter>Source Files\template-built-ins\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Engine\Renderer\Mesh.cpp">
+      <Filter>Source Files\Engine\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Engine\Renderer\Renderer.cpp">
+      <Filter>Source Files\Engine\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Engine\Renderer\Shader.cpp">
+      <Filter>Source Files\Engine\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Engine\App.cpp">
+      <Filter>Source Files\Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Engine\Entity.cpp">
+      <Filter>Source Files\Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Engine\Scene.cpp">
+      <Filter>Source Files\Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Engine\Window.cpp">
+      <Filter>Source Files\Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Engine\Renderer\Camera.cpp">
+      <Filter>Source Files\Engine\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Engine\Renderer\Texture.cpp">
+      <Filter>Source Files\Engine\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Engine\Renderer\TextureManager.cpp">
+      <Filter>Source Files\Engine\Renderer</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -988,6 +1030,36 @@
     </ClInclude>
     <ClInclude Include="include\glm\simd\vector_relational.h">
       <Filter>Header Files\template-built-ins\glm\simd</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Engine\Renderer\Mesh.h">
+      <Filter>Header Files\Engine\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Engine\Renderer\Renderer.h">
+      <Filter>Header Files\Engine\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Engine\Renderer\Shader.h">
+      <Filter>Header Files\Engine\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Engine\App.h">
+      <Filter>Header Files\Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Engine\Entity.h">
+      <Filter>Header Files\Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Engine\Scene.h">
+      <Filter>Header Files\Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Engine\Window.h">
+      <Filter>Header Files\Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Engine\Renderer\Camera.h">
+      <Filter>Header Files\Engine\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Engine\Renderer\Texture.h">
+      <Filter>Header Files\Engine\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Engine\Renderer\TextureManager.h">
+      <Filter>Header Files\Engine\Renderer</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

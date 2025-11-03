@@ -15,6 +15,13 @@ Window::Window(uint16_t width, uint16_t height, const std::string& name, int arg
 		std::cerr << "Error: " << glewGetErrorString(res) << std::endl;
 		exit(1);
 	}
+
+	static Window* self = this;
+
+	//stop window resizing
+	glutReshapeFunc([](int w, int h) {
+		glutReshapeWindow(self->width, self->height);
+		});
 }
 
 Window::~Window()
