@@ -97,6 +97,12 @@
     <Filter Include="Source Files\Engine\Renderer">
       <UniqueIdentifier>{b5359571-a515-43f4-83a2-09f97c38ada2}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Boid">
+      <UniqueIdentifier>{a6d1d540-8270-4cd3-98b4-e7ddf2d0a109}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Boid">
+      <UniqueIdentifier>{5e20b919-a1ad-424c-aa53-ef68e0db5ebd}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -143,6 +149,12 @@
     </ClCompile>
     <ClCompile Include="src\Engine\Renderer\TextureManager.cpp">
       <Filter>Source Files\Engine\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Boid\Boid.cpp">
+      <Filter>Source Files\Boid</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Boid\BoidScene.cpp">
+      <Filter>Source Files\Boid</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -1060,6 +1072,12 @@
     </ClInclude>
     <ClInclude Include="src\Engine\Renderer\TextureManager.h">
       <Filter>Header Files\Engine\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Boid\Boid.h">
+      <Filter>Header Files\Boid</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Boid\BoidScene.h">
+      <Filter>Header Files\Boid</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

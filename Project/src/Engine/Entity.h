@@ -12,7 +12,7 @@ class Entity
 {
 public:
 	Entity(std::shared_ptr<Mesh> mesh, const glm::vec2& position = glm::vec2(0.0f), const glm::vec2& scale = glm::vec2(1.0f), float rotation = 0.0f, std::shared_ptr<Texture> texture = nullptr);
-	~Entity();
+	virtual ~Entity();
 
 	glm::vec2 position;
 	float rotation;

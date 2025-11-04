@@ -39,7 +39,7 @@ void Camera::ProcessMouseScroll(int direction)
 	if (direction > 0) // scroll up
 	{
 		zoom -= zoomStep;
-		if (zoom < 0.0f) zoom = 0.0f; // prevent zooming too close
+		if (zoom < 0.1f) zoom = 0.1f; // prevent zooming too close
 	}
 	else if (direction < 0) // scroll down
 	{
