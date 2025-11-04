@@ -5,12 +5,15 @@
 #include "../Boid/BoidScene.h"
 
 #include <cmath>
+#include <ctime>
 
 int32_t App::argc = 0;
 char** App::argv = nullptr;
 
 App::App(const std::string& name, uint16_t width, uint16_t height)
 {
+	srand(static_cast<unsigned int>(time(0)));
+
 	window = new Window(width, height, name, argc, argv);
 	renderer = new Renderer(this);
 
