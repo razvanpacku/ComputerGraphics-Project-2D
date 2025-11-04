@@ -2,7 +2,8 @@
 
 int main(int argc, char* argv[])
 {
-	App::Init(argc, argv);
+	int32_t argc0 = static_cast<int32_t>(argc);
+	App::Init(argc0, argv);
 	App* app = &App::Get("Boids");
 
 	app->Run();

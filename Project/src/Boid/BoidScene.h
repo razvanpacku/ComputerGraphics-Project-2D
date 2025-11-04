@@ -16,7 +16,7 @@ public:
 	BoidScene(Renderer* renderer);
 	~BoidScene();
 
-	void InitBoids(int count);
+	void InitBoids(uint16_t count);
 
 	static std::shared_ptr<Mesh> CreateBoidMesh();
 

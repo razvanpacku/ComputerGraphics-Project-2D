@@ -8,7 +8,7 @@
 class Window
 {
 public:
-	Window(uint16_t width, uint16_t height, const std::string& name, int argc, char** argv);
+	Window(uint16_t width, uint16_t height, const std::string& name, int32_t argc, char** argv);
 	~Window();
 
 	uint16_t GetWidth() const { return width; }

@@ -17,10 +17,10 @@ BoidScene::~BoidScene()
 {
 }
 
-void BoidScene::InitBoids(int count)
+void BoidScene::InitBoids(uint16_t count)
 {
 	//randomly add boids withing the scene bounds with random velocities and rotations
-	for (int i = 0; i < count; ++i)
+	for (uint16_t i = 0; i < count; ++i)
 	{
 		float x = static_cast<float>(rand() % (10*BOID_SCENE_W)) / 10.0f - BOID_SCENE_W / 2.0f;
 		float y = static_cast<float>(rand() % (10*BOID_SCENE_H)) / 10.0f - BOID_SCENE_H / 2.0f;
@@ -52,7 +52,7 @@ std::shared_ptr<Mesh> BoidScene::CreateBoidMesh()
 		{ 0.0f, 0.0f},
 		{ 0.5f, -0.5f },
 	};
-	std::vector<unsigned int> indices = { 0, 1, 2, 0, 3, 2 };
+	std::vector<uint32_t> indices = { 0, 1, 2, 0, 3, 2 };
 	return std::make_shared<Mesh>(vertices, colors, texCoords, indices);
 }
 

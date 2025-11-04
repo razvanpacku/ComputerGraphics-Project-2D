@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-Window::Window(uint16_t width, uint16_t height, const std::string& name, int argc, char** argv)
+Window::Window(uint16_t width, uint16_t height, const std::string& name, int32_t argc, char** argv)
 	: width(width), height(height)
 {
 	glutInit(&argc, argv);

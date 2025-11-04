@@ -13,7 +13,7 @@ class Entity;
 class App
 {
 public:
-	static void Init(int argc, char* argv[]);
+	static void Init(int32_t argc, char* argv[]);
 	static App& Get(const std::string& name = "", uint16_t width = WINDOW_WIDTH, uint16_t height = WINDOW_HEIGHT);
 
 	void Update();
@@ -25,7 +25,7 @@ private:
 	App(const std::string& name, uint16_t width, uint16_t height);
 	~App();
 
-	static int argc;
+	static int32_t argc;
 	static char** argv;
 
 	float lastFrameTime = 0.0f;
