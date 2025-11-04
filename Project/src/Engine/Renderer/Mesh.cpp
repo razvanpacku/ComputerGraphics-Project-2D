@@ -4,7 +4,7 @@ Mesh::Mesh(
 	const std::vector<glm::vec2>& vertices,
 	const std::vector<glm::vec3>& colors,
 	const std::vector<glm::vec2>& texCoords,
-	const std::vector<unsigned int>& indices
+	const std::vector<std::uint32_t>& indices
 ) {
     indexCount = static_cast<GLsizei>(indices.size());
 
@@ -34,7 +34,7 @@ Mesh::Mesh(
 
     // Indices
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), indices.data(), GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(uint32_t), indices.data(), GL_STATIC_DRAW);
 
     glBindVertexArray(0);
 }
