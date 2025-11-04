@@ -12,25 +12,27 @@ class Renderer;
 class Scene
 {
 public:
-	Scene(Renderer* renderer);
-	~Scene();
 
-	Entity* AddEntity(std::unique_ptr<Entity> entity);
-	void RemoveEntity(std::unique_ptr<Entity> entity);
+    Scene(Renderer* renderer);
+    virtual ~Scene(); 
 
-	void SetUpdateFunction(const std::function<void(float)>& func) {
-		updateFunction = func;
-	}
-	void Update(float deltaTime);
+    Entity* AddEntity(std::unique_ptr<Entity> entity);
+    void RemoveEntity(std::unique_ptr<Entity> entity);
 
-	glm::vec3 backgroundColor = glm::vec3(0.75f, 1.0f, 1.0f);
+    void SetUpdateFunction(const std::function<void(float)>& func) {
+        updateFunction = func;
+    }
+    void Update(float deltaTime);
 
-	void Render() const;
+    glm::vec3 backgroundColor = glm::vec3(0.75f, 1.0f, 1.0f);
+
+    void Render() const;
+protected:
+    std::vector<std::unique_ptr<Entity>> entities;
+
+    std::function<void(float)> updateFunction;
 private:
-	std::vector<std::unique_ptr<Entity>> entities;
 
-	Renderer* renderer;
-
-	std::function<void(float)> updateFunction;
+    Renderer* renderer;
 };
 

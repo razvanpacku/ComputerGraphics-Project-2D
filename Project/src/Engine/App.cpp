@@ -1,6 +1,8 @@
 #include "./App.h"
 
 #include "Renderer/TextureManager.h"
+#include "../Boid/Boid.h"
+#include "../Boid/BoidScene.h"
 
 #include <cmath>
 
@@ -20,6 +22,7 @@ App::App(const std::string& name, uint16_t width, uint16_t height)
 	auto tex1 = TextureManager::Load("textures/dev.png");
 
 	// app logic
+	/*
 	Scene* scene = new Scene(renderer);
 	scene->backgroundColor = glm::vec3(0.1f, 0.1f, 0.1f);
 
@@ -49,6 +52,23 @@ App::App(const std::string& name, uint16_t width, uint16_t height)
 		});
 
 	renderer->SetScene(scene);
+	*/
+
+	// Define a square mesh
+	std::vector<glm::vec2> vertices = { {-0.5f,-0.5f}, {0.5f,-0.5f}, {0.5f,0.5f}, {-0.5f,0.5f} };
+	std::vector<glm::vec3> colors = { {1,0,0}, {0,1,0}, {0,0,1}, {1,1,0} };
+	std::vector<glm::vec2> texCoords = { {0,0}, {1,0}, {1,1}, {0,1} };
+	std::vector<unsigned int> indices = { 0,1,2, 2,3,0 };
+
+	auto squareMesh = renderer->AddMesh("square", std::make_shared<Mesh>(vertices, colors, texCoords, indices));
+
+	Scene* scene = new BoidScene(renderer);
+	auto boidMesh = renderer->AddMesh("boid", BoidScene::CreateBoidMesh());
+	Boid::InitSharedResources(boidMesh, tex1);
+	dynamic_cast<BoidScene*>(scene)->AddBackground(squareMesh, tex1);
+	dynamic_cast<BoidScene*>(scene)->InitBoids(100);
+
+	renderer->SetScene(scene);
 }
 
 App::~App()
@@ -76,6 +96,13 @@ App& App::Get(const std::string& name, uint16_t width, uint16_t height)
 void App::SetEntityTracking()
 {
 	isTrackingEntity = !isTrackingEntity;
+
+	//special behaviour for boidscene
+	if (isTrackingEntity){
+		trackedEntity = dynamic_cast<BoidScene*>(renderer->GetScene())->GetRandomBoid();
+		renderer->GetCamera()->targetEntity = trackedEntity;
+	}
+
 	if (isTrackingEntity && trackedEntity) {
 		renderer->GetCamera()->hasTarget = true;
 	}
