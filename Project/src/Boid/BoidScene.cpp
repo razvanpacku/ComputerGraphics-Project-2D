@@ -47,10 +47,10 @@ std::shared_ptr<Mesh> BoidScene::CreateBoidMesh()
 		{ 1.0f, 1.0f, 1.0f }
 	};
 	std::vector<glm::vec2> texCoords = {
-		{ 0.0f,  0.5f},
-		{-0.5f, -0.5f},
-		{ 0.0f, 0.0f},
-		{ 0.5f, -0.5f },
+		{ 0.5f,  1.0f},
+		{0.0f, 0.0f},
+		{ 0.5f, 0.5f},
+		{ 1.0f, 0.0f },
 	};
 	std::vector<uint32_t> indices = { 0, 1, 2, 0, 3, 2 };
 	return std::make_shared<Mesh>(vertices, colors, texCoords, indices);
