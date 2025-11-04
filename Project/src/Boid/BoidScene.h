@@ -40,11 +40,15 @@ private:
 	// Simulation parameters
 	float neighborRadius = 1.0f;     // How far a boid can "see"
 	float separationRadius = 0.5f;   // Minimum distance before repelling
+	float minSpeed = 2.0f;            // Minimum speed
 	float maxSpeed = 10.0f;           // Speed cap
 	float maxForce = 5.0f;           // Steering force limit
 	float alignmentWeight = 1.0f;
 	float cohesionWeight = 0.4f;
 	float separationWeight = 1.5f;
+
+	float bias_increment = 0.0005f; // How much bias increases per update
+	float max_bias = 0.05f;        // Maximum bias value
 
 	std::shared_ptr<Entity> backgroundEntity;
 

@@ -9,6 +9,8 @@ public:
 	~Boid();
 
 	glm::vec2 velocity;
+	int group = 0;
+	float bias = 0.001f;
 
 	static void InitSharedResources(std::shared_ptr<Mesh> mesh, std::shared_ptr<Texture> texture);
 private:

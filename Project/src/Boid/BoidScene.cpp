@@ -27,7 +27,11 @@ void BoidScene::InitBoids(uint16_t count)
 		float speed = static_cast<float>((rand() % 50) + 50); // Speed between 50 and 100
 		float angle = static_cast<float>(rand() % 360);
 		glm::vec2 velocity = glm::vec2(cosf(glm::radians(angle)), sinf(glm::radians(angle))) * speed;
-		AddEntity(std::make_unique<Boid>(glm::vec2(x, y), velocity));
+		auto boid = std::make_unique<Boid>(glm::vec2(x, y), velocity);
+		// randomly assign to a scout group
+		boid->group = (rand() % 4); // 0, 1 or 2
+		boid->bias = 0.05f + static_cast<float>(rand()) / RAND_MAX * 0.05f; // small bias
+		AddEntity(std::move(boid));
 	}
 }
 
@@ -163,17 +167,43 @@ void BoidScene::UpdateBoids(float deltaTime)
 			accel = glm::normalize(accel) * maxForce;
 
 		boid->velocity += accel * deltaTime;
-		if (glm::length(boid->velocity) > maxSpeed)
-			boid->velocity = glm::normalize(boid->velocity) * maxSpeed;
-
-		boid->position += boid->velocity * deltaTime;
-
-		// update facing direction
-		boid->rotation = VectorToAngle(boid->velocity);
 
 		ApplyEdgeAvoidance(boid, deltaTime);
-		if (glm::length(boid->velocity) > maxSpeed)
-			boid->velocity = glm::normalize(boid->velocity) * maxSpeed;
+
+		if (boid->group == 1) {
+			if (boid->velocity.x > 0.0f)
+				boid->bias = std::min(max_bias, boid->bias + bias_increment);
+			else
+				boid->bias = std::max(bias_increment, boid->bias - bias_increment);
+		}
+		if (boid->group == 2) {
+			if (boid->velocity.x < 0.0f)
+				boid->bias = std::min(max_bias, boid->bias + bias_increment);
+			else
+				boid->bias = std::max(bias_increment, boid->bias - bias_increment);
+		}
+
+		if (boid->group == 1) {
+			// Biased to the right
+			boid->velocity.x = (1.0f - boid->bias) * boid->velocity.x + (boid->bias * 1.0f);
+		}
+		else if (boid->group == 2) {
+			// Biased to the left
+			boid->velocity.x = (1.0f - boid->bias) * boid->velocity.x - boid->bias;
+		}
+
+		float speed = glm::length(boid->velocity);
+		if (speed > 0.0f) // avoid division by zero
+		{
+			if (speed < minSpeed)
+				boid->velocity = glm::normalize(boid->velocity) * minSpeed;
+			else if (speed > maxSpeed)
+				boid->velocity = glm::normalize(boid->velocity) * maxSpeed;
+		}
+
+		boid->position += boid->velocity * deltaTime;
+		boid->rotation = VectorToAngle(boid->velocity);
+
 	}
 }
 
