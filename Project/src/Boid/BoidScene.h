@@ -26,6 +26,11 @@ public:
 	void AddBackground(std::shared_ptr<Mesh> mesh, std::shared_ptr<Texture> texture);
 
 	Entity* GetRandomBoid();
+
+	// Obstacle API
+	void AddObstacle(const glm::vec2& center, float radius);
+	void ClearObstacles();
+
 private:
 	// Scene boundaries
 	float leftBound = -BOID_SCENE_W / 2.0f;
@@ -47,6 +52,12 @@ private:
 	float cohesionWeight = 0.4f;
 	float separationWeight = 1.5f;
 
+	// Obstacle avoidance params
+	struct CircleObstacle { glm::vec2 center; float radius; };
+	std::vector<CircleObstacle> obstacles;
+	float obstacleWeight = 3.0f;        // how strongly boids avoid obstacles
+	float obstacleAvoidDistance = 1.0f; // extra buffer beyond obstacle radius to start avoiding
+
 	float bias_increment = 0.0005f; // How much bias increases per update
 	float max_bias = 0.05f;        // Maximum bias value
 
@@ -57,6 +68,7 @@ private:
 	glm::vec2 ComputeAlignment(const Boid* boid, const std::vector<Boid*>& neighbors);
 	glm::vec2 ComputeCohesion(const Boid* boid, const std::vector<Boid*>& neighbors);
 	glm::vec2 ComputeSeparation(const Boid* boid, const std::vector<Boid*>& neighbors);
+	glm::vec2 ComputeObstacleAvoidance(const Boid* boid);
 	void ApplyEdgeAvoidance(Boid* boid, float deltaTime);
 
 	// Update logic

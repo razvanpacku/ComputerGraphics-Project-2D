@@ -123,6 +123,37 @@ glm::vec2 BoidScene::ComputeSeparation(const Boid* boid, const std::vector<Boid*
 	return steer;
 }
 
+// New: compute obstacle avoidance steering
+glm::vec2 BoidScene::ComputeObstacleAvoidance(const Boid* boid)
+{
+	glm::vec2 steer(0.0f);
+	for (const auto& obs : obstacles)
+	{
+		glm::vec2 toCenter = obs.center - boid->position;
+		float dist = glm::dot(toCenter, toCenter);
+		float avoidRadius = (obs.radius + obstacleAvoidDistance) * (obs.radius + obstacleAvoidDistance);
+
+		// If inside avoid radius, push away proportional to penetration
+		if (dist < avoidRadius && dist > 0.0001f)
+		{
+			// direction away from obstacle center
+			glm::vec2 away = glm::normalize(boid->position - obs.center);
+
+			// strength increases as we get closer (penetration proportion)
+			float penetration = (sqrt(avoidRadius) - sqrt(dist)) / sqrt(avoidRadius);
+			glm::vec2 desired = away * (maxSpeed * penetration);
+
+			// steering = desired velocity - current velocity (consistent with other steering implementations)
+			glm::vec2 localSteer = desired - boid->velocity;
+			steer += localSteer;
+		}
+	}
+	// clamp steering magnitude similar to other forces
+	if (glm::length(steer) > maxForce)
+		steer = glm::normalize(steer) * maxForce;
+	return steer;
+}
+
 void BoidScene::ApplyEdgeAvoidance(Boid* boid, float deltaTime)
 {
 	float distance;
@@ -219,4 +250,15 @@ Entity* BoidScene::GetRandomBoid()
 	if (boids.empty()) return nullptr;
 	int index = rand() % boids.size();
 	return boids[index];
+}
+
+// Public obstacle API
+void BoidScene::AddObstacle(const glm::vec2& center, float radius)
+{
+	obstacles.push_back({ center, radius });
+}
+
+void BoidScene::ClearObstacles()
+{
+	obstacles.clear();
 }
