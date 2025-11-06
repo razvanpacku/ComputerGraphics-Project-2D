@@ -1,6 +1,7 @@
 #include "./App.h"
 
 #include "Renderer/TextureManager.h"
+#include "InputManager.h"
 #include "../Boid/Boid.h"
 #include "../Boid/BoidScene.h"
 
@@ -20,9 +21,19 @@ App::App(const std::string& name, uint16_t width, uint16_t height)
 	// Set up camera
 	Camera* camera = new Camera();
 	renderer->SetCamera(camera);
+	//camera controls
+	InputManager::RegisterMouseWheelAction([camera](int direction) {
+		camera->ProcessMouseScroll(direction);
+		});
+	InputManager::RegisterKeyAction('t', [this]() {
+		this->SetEntityTracking();
+		});
 
 	//load textures
 	auto tex1 = TextureManager::Load("textures/dev.png");
+	TextureManager::Load("textures/alignment.png");
+	TextureManager::Load("textures/cohesion.png");
+	TextureManager::Load("textures/separation.png");
 
 	// Define a square mesh
 	std::vector<glm::vec2> vertices = { {-0.5f,-0.5f}, {0.5f,-0.5f}, {0.5f,0.5f}, {-0.5f,0.5f} };
@@ -37,6 +48,7 @@ App::App(const std::string& name, uint16_t width, uint16_t height)
 	Boid::InitSharedResources(boidMesh, tex1);
 	dynamic_cast<BoidScene*>(scene)->AddBackground(squareMesh, tex1);
 	dynamic_cast<BoidScene*>(scene)->InitBoids(100);
+	dynamic_cast<BoidScene*>(scene)->AddControlEntities(squareMesh);
 
 	renderer->SetScene(scene);
 }
