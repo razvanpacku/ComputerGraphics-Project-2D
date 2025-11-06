@@ -183,8 +183,10 @@ xcopy /y /d "$(ProjectDir)lib\x64\SOIL\*.dll" "$(OutDir)" &amp;</Command>
     <ClCompile Include="main.cpp" />
     <ClCompile Include="src\Boid\Boid.cpp" />
     <ClCompile Include="src\Boid\BoidScene.cpp" />
+    <ClCompile Include="src\Boid\Slider.cpp" />
     <ClCompile Include="src\Engine\App.cpp" />
     <ClCompile Include="src\Engine\Entity.cpp" />
+    <ClCompile Include="src\Engine\InputManager.cpp" />
     <ClCompile Include="src\Engine\Renderer\Camera.cpp" />
     <ClCompile Include="src\Engine\Renderer\Mesh.cpp" />
     <ClCompile Include="src\Engine\Renderer\Renderer.cpp" />
@@ -495,8 +497,10 @@ xcopy /y /d "$(ProjectDir)lib\x64\SOIL\*.dll" "$(OutDir)" &amp;</Command>
     <ClInclude Include="include\SOIL.h" />
     <ClInclude Include="src\Boid\Boid.h" />
     <ClInclude Include="src\Boid\BoidScene.h" />
+    <ClInclude Include="src\Boid\Slider.h" />
     <ClInclude Include="src\Engine\App.h" />
     <ClInclude Include="src\Engine\Entity.h" />
+    <ClInclude Include="src\Engine\InputManager.h" />
     <ClInclude Include="src\Engine\Renderer\Camera.h" />
     <ClInclude Include="src\Engine\Renderer\Mesh.h" />
     <ClInclude Include="src\Engine\Renderer\Renderer.h" />
@@ -668,6 +672,8 @@ xcopy /y /d "$(ProjectDir)lib\x64\SOIL\*.dll" "$(OutDir)" &amp;</Command>
     <None Include="lib\x64\SOIL\SOIL.dll" />
     <None Include="src\shaders\base.frag" />
     <None Include="src\shaders\base.vert" />
+    <None Include="src\shaders\slider.frag" />
+    <None Include="src\shaders\slider.vert" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

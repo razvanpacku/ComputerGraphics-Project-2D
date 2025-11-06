@@ -4,6 +4,10 @@
 
 #include <iostream>
 
+#include "../Engine/Renderer/Renderer.h"
+#include "../Engine/Renderer/TextureManager.h"
+#include "../Engine/InputManager.h"
+
 BoidScene::BoidScene(Renderer* renderer) : Scene(renderer)
 {
 	backgroundColor = glm::vec3(0.75f, 1.0f, 1.0f);
@@ -31,6 +35,7 @@ void BoidScene::InitBoids(uint16_t count)
 		// randomly assign to a scout group
 		boid->group = (rand() % 4); // 0, 1 or 2
 		boid->bias = 0.05f + static_cast<float>(rand()) / RAND_MAX * 0.05f; // small bias
+		boidEntities.push_back(boid.get());
 		AddEntity(std::move(boid));
 	}
 }
@@ -67,17 +72,41 @@ void BoidScene::AddBackground(std::shared_ptr<Mesh> mesh, std::shared_ptr<Textur
 	AddEntity(std::unique_ptr<Entity>(backgroundEntity.get()));
 }
 
+void BoidScene::AddControlEntities(std::shared_ptr<Mesh> mesh)
+{
+	auto sliderShader = renderer->GetShader("slider");
+
+	//get textures
+	auto alignTex = TextureManager::Load("textures/alignment.png");
+	auto cohTex = TextureManager::Load("textures/cohesion.png");
+	auto sepTex = TextureManager::Load("textures/separation.png");
+
+	float sliderWidth = 2.0f / 3.0f;
+	// add 3 rectangles (scaled from a square mesh) at the bottom of the scene to control alignment, cohesion, and separation weights
+	alignmentControl = new Slider(mesh, glm::vec2(-sliderWidth, -0.9f), glm::vec2(sliderWidth, 0.2f), 0.0f, alignTex, sliderShader, true, 0.0f, 2.0f);
+	cohesionControl = new Slider(mesh, glm::vec2(0.0f, -0.9f), glm::vec2(sliderWidth, 0.2f), 0.0f, cohTex, sliderShader, true, 0.0f, 2.0f);
+	separationControl = new Slider(mesh, glm::vec2(sliderWidth, -0.9f), glm::vec2(sliderWidth, 0.2f), 0.0f, sepTex, sliderShader, true, 0.0f, 2.0f);
+
+	//controls for sliders
+	alignmentControl->BindControl(alignmentWeight, '[', ']');
+	cohesionControl->BindControl(cohesionWeight, ';', '\'');
+	separationControl->BindControl(separationWeight, ',', '.');
+
+	AddEntity(std::unique_ptr<Entity>(alignmentControl));
+	AddEntity(std::unique_ptr<Entity>(cohesionControl));
+	AddEntity(std::unique_ptr<Entity>(separationControl));
+}
+
 std::vector<Boid*> BoidScene::GetNearbyBoids(const Boid* boid)
 {
 	std::vector<Boid*> neighbors;
-	for (const auto& entity : entities)
+	for (const auto& entity : boidEntities)
 	{
-		Boid* other = dynamic_cast<Boid*>(entity.get());
-		if (other && other != boid)
+		if (entity != boid)
 		{
-			float dist = glm::length(other->position - boid->position);
+			float dist = glm::length(entity->position - boid->position);
 			if (dist < neighborRadius)
-				neighbors.push_back(other);
+				neighbors.push_back(entity);
 		}
 	}
 	return neighbors;
@@ -151,10 +180,8 @@ void BoidScene::ApplyEdgeAvoidance(Boid* boid, float deltaTime)
 
 void BoidScene::UpdateBoids(float deltaTime)
 {
-	for (auto& entity : entities)
+	for (auto& boid : boidEntities)
 	{
-		Boid* boid = dynamic_cast<Boid*>(entity.get());
-		if (!boid) continue;
 
 		auto neighbors = GetNearbyBoids(boid);
 
@@ -209,14 +236,7 @@ void BoidScene::UpdateBoids(float deltaTime)
 
 Entity* BoidScene::GetRandomBoid()
 {
-	std::vector<Boid*> boids;
-	for (const auto& entity : entities)
-	{
-		Boid* boid = dynamic_cast<Boid*>(entity.get());
-		if (boid)
-			boids.push_back(boid);
-	}
-	if (boids.empty()) return nullptr;
-	int index = rand() % boids.size();
-	return boids[index];
+	if (boidEntities.empty()) return nullptr;
+	int index = rand() % boidEntities.size();
+	return boidEntities[index];
 }

@@ -30,9 +30,9 @@ public:
 protected:
     std::vector<std::unique_ptr<Entity>> entities;
 
+    Renderer* renderer;
+
     std::function<void(float)> updateFunction;
 private:
-
-    Renderer* renderer;
 };
 

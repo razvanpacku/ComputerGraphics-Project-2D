@@ -2,6 +2,7 @@
 
 #include "../Engine/Scene.h"
 #include "Boid.h"
+#include "Slider.h"
 
 //forard declarations
 class Mesh;
@@ -24,6 +25,7 @@ public:
 	void SetUpdateFunction(const std::function<void(float)>& func) = delete;
 		
 	void AddBackground(std::shared_ptr<Mesh> mesh, std::shared_ptr<Texture> texture);
+	void AddControlEntities(std::shared_ptr<Mesh> mesh);
 
 	Entity* GetRandomBoid();
 private:
@@ -50,7 +52,9 @@ private:
 	float bias_increment = 0.0005f; // How much bias increases per update
 	float max_bias = 0.05f;        // Maximum bias value
 
+	std::vector<Boid*> boidEntities;
 	std::shared_ptr<Entity> backgroundEntity;
+	Slider* alignmentControl, * cohesionControl, * separationControl;
 
 	// Internal helpers
 	std::vector<Boid*> GetNearbyBoids(const Boid* boid);
