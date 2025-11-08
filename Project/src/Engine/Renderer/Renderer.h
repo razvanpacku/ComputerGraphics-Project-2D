@@ -10,7 +10,7 @@
 
 #include <unordered_map>
 
-//forward declarations
+//Forward declarations
 class App;
 
 #define DEFAULT_CLEAR_COLOR_R 0.75f
@@ -55,7 +55,7 @@ private:
 
 	Scene* scene = nullptr;
 
-	//temporary static variables, move to another file later
+	//Temporary static variables, move to another file later
 	void CreateShaders(void);
 };
 

@@ -21,7 +21,7 @@ App::App(const std::string& name, uint16_t width, uint16_t height)
 	Camera* camera = new Camera();
 	renderer->SetCamera(camera);
 
-	//load textures
+	//Load default texture
 	auto tex1 = TextureManager::Load("textures/dev.png");
 
 	// Define a square mesh
@@ -36,9 +36,28 @@ App::App(const std::string& name, uint16_t width, uint16_t height)
 	auto boidMesh = renderer->AddMesh("boid", BoidScene::CreateBoidMesh());
 	Boid::InitSharedResources(boidMesh, tex1);
 	dynamic_cast<BoidScene*>(scene)->AddBackground(squareMesh, tex1);
+
+	// Preload cloud textures (textures/cloud01.png .. textures/cloud10.png)
+	std::vector<std::shared_ptr<Texture>> cloudTextures;
+	cloudTextures.reserve(10);
+	for (int i = 1; i <= 10; ++i) {
+		char path[128];
+		std::snprintf(path, sizeof(path), "textures/cloud%02d.png", i);
+		cloudTextures.push_back(TextureManager::Load(path));
+	}
+
+	// Initialize clouds first so they are rendered before boids (boids will be drawn on top)
+	if (auto boidScene = dynamic_cast<BoidScene*>(scene)) {
+		boidScene->InitClouds(15);
+	}
+
+	// Create boids after clouds so they render above them and are visible immediately
 	dynamic_cast<BoidScene*>(scene)->InitBoids(100);
 
 	renderer->SetScene(scene);
+
+	// Prevent a large first-frame deltaTime by initializing lastFrameTime to the current time
+	lastFrameTime = static_cast<float>(glutGet(GLUT_ELAPSED_TIME)) / 1000.0f;
 }
 
 App::~App()
@@ -67,7 +86,7 @@ void App::SetEntityTracking()
 {
 	isTrackingEntity = !isTrackingEntity;
 
-	//special behaviour for boidscene
+	//Special behaviour for boidscene
 	if (isTrackingEntity){
 		trackedEntity = dynamic_cast<BoidScene*>(renderer->GetScene())->GetRandomBoid();
 		renderer->GetCamera()->targetEntity = trackedEntity;
@@ -97,6 +116,9 @@ void App::Update()
 	float currentFrameTime = static_cast<float>(glutGet(GLUT_ELAPSED_TIME)) / 1000.0f;
 	deltaTime = currentFrameTime - lastFrameTime;
 	lastFrameTime = currentFrameTime;
+
+	// Clamp deltaTime to avoid huge jumps on the first frame or after stalls
+	if (deltaTime > 0.05f) deltaTime = 0.05f;
 
 	if (renderer && renderer->GetScene())
 		renderer->GetScene()->Update(deltaTime);

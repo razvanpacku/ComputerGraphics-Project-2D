@@ -4,12 +4,16 @@
 
 #include <iostream>
 
+#include "../Engine/Renderer/TextureManager.h"
+#include <cstdlib>
+
 BoidScene::BoidScene(Renderer* renderer) : Scene(renderer)
 {
 	backgroundColor = glm::vec3(0.75f, 1.0f, 1.0f);
 	updateFunction = [this](float deltaTime)
 		{
 			UpdateBoids(deltaTime);
+			UpdateClouds(deltaTime);
 		};
 }
 
@@ -28,9 +32,9 @@ void BoidScene::InitBoids(uint16_t count)
 		float angle = static_cast<float>(rand() % 360);
 		glm::vec2 velocity = glm::vec2(cosf(glm::radians(angle)), sinf(glm::radians(angle))) * speed;
 		auto boid = std::make_unique<Boid>(glm::vec2(x, y), velocity);
-		// randomly assign to a scout group
+		// Randomly assign to a scout group
 		boid->group = (rand() % 4); // 0, 1 or 2
-		boid->bias = 0.05f + static_cast<float>(rand()) / RAND_MAX * 0.05f; // small bias
+		boid->bias = 0.05f + static_cast<float>(rand()) / RAND_MAX * 0.05f; // Small bias
 		AddEntity(std::move(boid));
 	}
 }
@@ -90,7 +94,7 @@ glm::vec2 BoidScene::ComputeAlignment(const Boid* boid, const std::vector<Boid*>
 	for (auto n : neighbors) avgVel += n->velocity;
 	avgVel /= static_cast<float>(neighbors.size());
 	avgVel = glm::normalize(avgVel) * maxSpeed;
-	return avgVel - boid->velocity; // steering
+	return avgVel - boid->velocity; // Steering
 }
 
 glm::vec2 BoidScene::ComputeCohesion(const Boid* boid, const std::vector<Boid*>& neighbors)
@@ -113,7 +117,7 @@ glm::vec2 BoidScene::ComputeSeparation(const Boid* boid, const std::vector<Boid*
 		if (dist < separationRadius && dist > 0)
 		{
 			glm::vec2 diff = glm::normalize(boid->position - n->position);
-			steer += diff / dist; // stronger when closer
+			steer += diff / dist; // Stronger when closer
 		}
 	}
 	if (glm::length(steer) > 0)
@@ -123,7 +127,6 @@ glm::vec2 BoidScene::ComputeSeparation(const Boid* boid, const std::vector<Boid*
 	return steer;
 }
 
-// New: compute obstacle avoidance steering
 glm::vec2 BoidScene::ComputeObstacleAvoidance(const Boid* boid)
 {
 	glm::vec2 steer(0.0f);
@@ -136,19 +139,19 @@ glm::vec2 BoidScene::ComputeObstacleAvoidance(const Boid* boid)
 		// If inside avoid radius, push away proportional to penetration
 		if (dist < avoidRadius && dist > 0.0001f)
 		{
-			// direction away from obstacle center
+			// Direction away from obstacle center
 			glm::vec2 away = glm::normalize(boid->position - obs.center);
 
-			// strength increases as we get closer (penetration proportion)
+			// Strength increases as we get closer (penetration proportion)
 			float penetration = (sqrt(avoidRadius) - sqrt(dist)) / sqrt(avoidRadius);
 			glm::vec2 desired = away * (maxSpeed * penetration);
 
-			// steering = desired velocity - current velocity (consistent with other steering implementations)
+			// Steering = desired velocity - current velocity (consistent with other steering implementations)
 			glm::vec2 localSteer = desired - boid->velocity;
 			steer += localSteer;
 		}
 	}
-	// clamp steering magnitude similar to other forces
+	// Clamp steering magnitude similar to other forces
 	if (glm::length(steer) > maxForce)
 		steer = glm::normalize(steer) * maxForce;
 	return steer;
@@ -224,7 +227,7 @@ void BoidScene::UpdateBoids(float deltaTime)
 		}
 
 		float speed = glm::length(boid->velocity);
-		if (speed > 0.0f) // avoid division by zero
+		if (speed > 0.0f) // Avoid division by zero
 		{
 			if (speed < minSpeed)
 				boid->velocity = glm::normalize(boid->velocity) * minSpeed;
@@ -250,6 +253,127 @@ Entity* BoidScene::GetRandomBoid()
 	if (boids.empty()) return nullptr;
 	int index = rand() % boids.size();
 	return boids[index];
+}
+
+void BoidScene::InitClouds(uint16_t count)
+{
+	std::vector<glm::vec2> vertices = { {-0.5f,-0.5f}, {0.5f,-0.5f}, {0.5f,0.5f}, {-0.5f,0.5f} };
+	std::vector<glm::vec3> colors = { {1,1,1}, {1,1,1}, {1,1,1}, {1,1,1} };
+	std::vector<glm::vec2> texCoords = { {0,0}, {1,0}, {1,1}, {0,1} };
+	std::vector<uint32_t> indices = { 0,1,2, 2,3,0 };
+	std::shared_ptr<Mesh> quad = std::make_shared<Mesh>(vertices, colors, texCoords, indices);
+
+	// Distribute clouds into 3 groups -> group 1 = High (farthest), 2 = Mid, 3 = Low (nearest)
+	int highCount = count * 50 / 100; // 50%
+	int midCount = count * 35 / 100; // 35%
+	int lowCount = count - highCount - midCount; // remaining 15%
+
+	// Add back-to-front: High (1) first, then Mid (2), then Low (3) last
+	const int addOrder[3] = { 1, 2, 3 };
+	const int groupCounts[3] = { highCount, midCount, lowCount };
+
+	int cloudIndex = 0;
+	for (int orderIdx = 0; orderIdx < 3; ++orderIdx)
+	{
+		int group = addOrder[orderIdx];
+		int thisGroupCount = groupCounts[orderIdx];
+
+		for (int i = 0; i < thisGroupCount; ++i)
+		{
+			// Randomize position and properties
+			float x = leftBound + static_cast<float>(rand()) / static_cast<float>(RAND_MAX) * (rightBound - leftBound);
+			float y = bottomBound + static_cast<float>(rand()) / static_cast<float>(RAND_MAX) * (topBound - bottomBound);
+
+			float scaleMin, scaleMax, speedMin, speedMax, opacityMin, opacityMax;
+			if (group == 1) { // High
+				scaleMin = cloudMinScale[0]; scaleMax = cloudMaxScale[0];
+				speedMin = cloudMinSpeed[0]; speedMax = cloudMaxSpeed[0];
+				opacityMin = cloudMinOpacity[0]; opacityMax = cloudMaxOpacity[0];
+			}
+			else if (group == 2) { // Mid
+				scaleMin = cloudMinScale[1]; scaleMax = cloudMaxScale[1];
+				speedMin = cloudMinSpeed[1]; speedMax = cloudMaxSpeed[1];
+				opacityMin = cloudMinOpacity[1]; opacityMax = cloudMaxOpacity[1];
+			}
+			else { // Low
+				scaleMin = cloudMinScale[2]; scaleMax = cloudMaxScale[2];
+				speedMin = cloudMinSpeed[2]; speedMax = cloudMaxSpeed[2];
+				opacityMin = cloudMinOpacity[2]; opacityMax = cloudMaxOpacity[2];
+			}
+
+			float scale = scaleMin + (static_cast<float>(rand()) / static_cast<float>(RAND_MAX)) * (scaleMax - scaleMin);
+			float opacity = opacityMin + (static_cast<float>(rand()) / static_cast<float>(RAND_MAX)) * (opacityMax - opacityMin);
+			float speed = speedMin + (static_cast<float>(rand()) / static_cast<float>(RAND_MAX)) * (speedMax - speedMin);
+
+			// Random texture
+			int texIndex = 1 + (rand() % 10);
+			char path[128];
+			snprintf(path, sizeof(path), "textures/cloud%02d.png", texIndex);
+			auto tex = TextureManager::Load(path);
+
+			auto cloudEntity = std::make_unique<Entity>(quad, glm::vec2(x, y), glm::vec2(scale, scale), 0.0f, tex);
+			cloudEntity->useTexture = true;
+			cloudEntity->transparency = opacity;
+
+			Entity* rawPtr = cloudEntity.get();
+			AddEntity(std::move(cloudEntity));
+			clouds.push_back({ rawPtr, speed, group });
+			++cloudIndex;
+		}
+	}
+}
+
+void BoidScene::UpdateClouds(float deltaTime)
+{
+	for (auto& c : clouds)
+	{
+		if (!c.entity) continue;
+		c.entity->position.x += c.speed * deltaTime;
+
+		// Wrapped behavior: when cloud goes beyond rightBound, place it at leftBound with new random Y and group-specific properties
+		if (c.entity->position.x - (c.entity->scale.x * 0.5f) > rightBound + 1.0f)
+		{
+			c.entity->position.x = leftBound - 5.0f; // Place far to the left to avoid pop-ins upon reapperance
+			c.entity->position.y = bottomBound + static_cast<float>(rand()) / static_cast<float>(RAND_MAX) * (topBound - bottomBound);
+
+			// Re-apply group-specific ranges
+			int group = c.group;
+			float scaleMin, scaleMax, speedMin, speedMax, opacityMin, opacityMax;
+			if (group == 1) { // High
+				scaleMin = cloudMinScale[0]; scaleMax = cloudMaxScale[0];
+				speedMin = cloudMinSpeed[0]; speedMax = cloudMaxSpeed[0];
+				opacityMin = cloudMinOpacity[0]; opacityMax = cloudMaxOpacity[0];
+			}
+			else if (group == 2) { // Mid
+				scaleMin = cloudMinScale[1]; scaleMax = cloudMaxScale[1];
+				speedMin = cloudMinSpeed[1]; speedMax = cloudMaxSpeed[1];
+				opacityMin = cloudMinOpacity[1]; opacityMax = cloudMaxOpacity[1];
+			}
+			else { // Low
+				scaleMin = cloudMinScale[2]; scaleMax = cloudMaxScale[2];
+				speedMin = cloudMinSpeed[2]; speedMax = cloudMaxSpeed[2];
+				opacityMin = cloudMinOpacity[2]; opacityMax = cloudMaxOpacity[2];
+			}
+
+			// Randomize new properties within the group's ranges
+			c.speed = speedMin + (static_cast<float>(rand()) / static_cast<float>(RAND_MAX)) * (speedMax - speedMin);
+			c.entity->transparency = opacityMin + (static_cast<float>(rand()) / static_cast<float>(RAND_MAX)) * (opacityMax - opacityMin);
+			float newScale = scaleMin + (static_cast<float>(rand()) / static_cast<float>(RAND_MAX)) * (scaleMax - scaleMin);
+			c.entity->scale = glm::vec2(newScale, newScale);
+
+			// Randomize texture
+			int texIndex = 1 + (rand() % 10);
+			char path[128];
+			snprintf(path, sizeof(path), "textures/cloud%02d.png", texIndex);
+			c.entity->SetTexture(TextureManager::Load(path));
+		}
+	}
+}
+
+void BoidScene::ClearClouds()
+{
+	clouds.clear();
+	// Entities vector still owns the cloud Entities; user can decide to clear them if needed.
 }
 
 // Public obstacle API

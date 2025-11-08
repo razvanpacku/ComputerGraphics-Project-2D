@@ -27,6 +27,10 @@ public:
 
 	Entity* GetRandomBoid();
 
+	// Cloud API
+	void InitClouds(uint16_t count);
+	void ClearClouds();
+
 	// Obstacle API
 	void AddObstacle(const glm::vec2& center, float radius);
 	void ClearObstacles();
@@ -55,13 +59,24 @@ private:
 	// Obstacle avoidance params
 	struct CircleObstacle { glm::vec2 center; float radius; };
 	std::vector<CircleObstacle> obstacles;
-	float obstacleWeight = 3.0f;        // how strongly boids avoid obstacles
-	float obstacleAvoidDistance = 1.0f; // extra buffer beyond obstacle radius to start avoiding
+	float obstacleWeight = 3.0f;        // How strongly boids avoid obstacles
+	float obstacleAvoidDistance = 1.0f; // Extra buffer beyond obstacle radius to start avoiding
 
 	float bias_increment = 0.0005f; // How much bias increases per update
 	float max_bias = 0.05f;        // Maximum bias value
 
 	std::shared_ptr<Entity> backgroundEntity;
+
+	// Cloud logic
+	struct Cloud { Entity* entity; float speed; int group; };
+	std::vector<Cloud> clouds;
+	//			Cloud Groups: High,  Mid,  Low
+	float cloudMinScale[3] = { 1.0f, 3.0f, 6.0f };
+	float cloudMaxScale[3] = { 2.0f, 4.5f, 8.0f };
+	float cloudMinSpeed[3] = { 0.25f, 0.50f, 1.0f };
+	float cloudMaxSpeed[3] = { 0.50f, 0.80f, 1.5f };
+	float cloudMinOpacity[3] = { 0.50f, 0.80f, 0.95f };
+	float cloudMaxOpacity[3] = { 0.75f, 0.90f, 1.00f };
 
 	// Internal helpers
 	std::vector<Boid*> GetNearbyBoids(const Boid* boid);
@@ -73,5 +88,6 @@ private:
 
 	// Update logic
 	void UpdateBoids(float deltaTime);
+	void UpdateClouds(float deltaTime);
 };
 

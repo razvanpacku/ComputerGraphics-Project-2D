@@ -17,6 +17,7 @@ public:
 	glm::vec2 position;
 	float rotation;
 	glm::vec2 scale;
+	float transparency = 1.0f;
 
 	bool useTexture = true;
 	void SetTexture(std::shared_ptr<Texture> tex) { texture = tex; }

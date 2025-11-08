@@ -1,6 +1,6 @@
 #include "./Renderer.h"
 
-//temporary functions for rendering, move to another file later
+//Temporary functions for rendering, move to another file later
 
 #include "Util/loadShaders.h"
 
@@ -10,6 +10,8 @@ void Renderer::CreateShaders(void)
 {
 	shader = new Shader("shaders/base.vert", "shaders/base.frag");
 	shader->Use();
+	// Ensure sampler "tex" samples from texture unit 0
+	shader->setInt("tex", 0);
 }
 
 Renderer::Renderer(App* app) : app(app)
@@ -54,7 +56,7 @@ void Renderer::Init()
 			glutLeaveMainLoop();
 		}
 		else if (key == 't') {
-			//track entity
+			//Track entity
 			self->app->SetEntityTracking();
 		}
 		});
@@ -65,6 +67,10 @@ void Renderer::Init()
 		});
 
 	CreateShaders();
+
+	// Enable alpha blending for transparency
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
 
 void Renderer::Clear() const
@@ -103,10 +109,12 @@ void Renderer::Update() const
 
 void Renderer::RenderEntity(const Entity& entity) const
 {
-	//set up shader uniforms here
+	//Set up shader uniforms here
 	activeShader->setMat4("model", entity.GetModelMatrix());
 	activeShader->setBool("useTexture", entity.useTexture);
-	//draw the entity
+	// Per-entity transparency uniform
+	activeShader->setFloat("transparency", entity.transparency);
+	//Draw the entity
 	entity.Draw();
 }
 
@@ -123,7 +131,7 @@ void Renderer::Render() const
 	activeShader->setMat4("view", view);
 	activeShader->setMat4("projection", proj);
 
-	//do rendering here
+	//Do rendering here
 	scene->Render();
 
 	glFlush();
@@ -131,5 +139,5 @@ void Renderer::Render() const
 
 void Renderer::Cleanup() const
 {
-	//cleanup resources here
+	//Cleanup resources here
 }
