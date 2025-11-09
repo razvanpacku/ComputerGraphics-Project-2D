@@ -32,8 +32,17 @@ void Scene::Update(float deltaTime)
 
 void Scene::Render() const
 {
-	for (const auto& entity : entities)
+	// First: render normal entities
+	for (const auto& e : entities)
 	{
-		renderer->RenderEntity(*entity);
+		if (!e->isGUI)
+			renderer->RenderEntity(*e);
+	}
+
+	// Then: render GUI entities
+	for (const auto& e : entities)
+	{
+		if (e->isGUI)
+			renderer->RenderEntity(*e);
 	}
 }

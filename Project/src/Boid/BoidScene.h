@@ -2,13 +2,18 @@
 
 #include "../Engine/Scene.h"
 #include "Boid.h"
+#include "Nest.h"
+#include "Cloud.h"
+#include "Slider.h"
+
+#include <unordered_map>
 
 //forard declarations
 class Mesh;
 class Texture;
 
-#define BOID_SCENE_W 10
-#define BOID_SCENE_H 10
+#define BOID_SCENE_W 20
+#define BOID_SCENE_H 20
 
 class BoidScene : public Scene
 {
@@ -17,24 +22,24 @@ public:
 	~BoidScene();
 
 	void InitBoids(uint16_t count);
+	void InitNests(uint16_t count);
+	void InitClouds(uint16_t count);
 
 	static std::shared_ptr<Mesh> CreateBoidMesh();
+	static std::shared_ptr<Mesh> CreateNestMesh();
 
 	//override update function
 	void SetUpdateFunction(const std::function<void(float)>& func) = delete;
 		
 	void AddBackground(std::shared_ptr<Mesh> mesh, std::shared_ptr<Texture> texture);
+	void AddControlEntities(std::shared_ptr<Mesh> mesh);
+
+	void ToggleMouseAttractAt(const glm::vec2& worldPos);
+	void SetMouseAttractPos(const glm::vec2& worldPos);
+	bool IsMouseAttractActive() const { return mouseAttractActive; }
 
 	Entity* GetRandomBoid();
-
-	// Cloud API
-	void InitClouds(uint16_t count);
-	void ClearClouds();
-
-	// Obstacle API
-	void AddObstacle(const glm::vec2& center, float radius);
-	void ClearObstacles();
-
+	Entity* GetRandomNest();
 private:
 	// Scene boundaries
 	float leftBound = -BOID_SCENE_W / 2.0f;
@@ -49,41 +54,42 @@ private:
 	// Simulation parameters
 	float neighborRadius = 1.0f;     // How far a boid can "see"
 	float separationRadius = 0.5f;   // Minimum distance before repelling
-	float minSpeed = 2.0f;            // Minimum speed
-	float maxSpeed = 10.0f;           // Speed cap
+	float minSpeed = 0.5f;            // Minimum speed
+	float maxSpeed = 5.0f;           // Speed cap
 	float maxForce = 5.0f;           // Steering force limit
 	float alignmentWeight = 1.0f;
 	float cohesionWeight = 0.4f;
 	float separationWeight = 1.5f;
 
-	// Obstacle avoidance params
-	struct CircleObstacle { glm::vec2 center; float radius; };
-	std::vector<CircleObstacle> obstacles;
-	float obstacleWeight = 3.0f;        // How strongly boids avoid obstacles
-	float obstacleAvoidDistance = 1.0f; // Extra buffer beyond obstacle radius to start avoiding
-
 	float bias_increment = 0.0005f; // How much bias increases per update
 	float max_bias = 0.05f;        // Maximum bias value
 
-	std::shared_ptr<Entity> backgroundEntity;
+	float nestRadius = 0.5f;
+	float nestAttractStrength = 3.0f;
+	float nestRetargetInterval = 5.0f;  // seconds between random reassignments
+	float timeSinceRetarget = 0.0f;
+	std::unordered_map<const Boid*, int> boidNestMap; // which nest each boid is bound to
 
-	// Cloud logic
-	struct Cloud { Entity* entity; float speed; int group; };
-	std::vector<Cloud> clouds;
-	//			Cloud Groups: High,  Mid,  Low
-	float cloudMinScale[3] = { 1.0f, 3.0f, 6.0f };
-	float cloudMaxScale[3] = { 2.0f, 4.5f, 8.0f };
-	float cloudMinSpeed[3] = { 0.25f, 0.50f, 1.0f };
-	float cloudMaxSpeed[3] = { 0.50f, 0.80f, 1.5f };
-	float cloudMinOpacity[3] = { 0.50f, 0.80f, 0.95f };
-	float cloudMaxOpacity[3] = { 0.75f, 0.90f, 1.00f };
+
+	// Entities
+	std::vector<Boid*> boidEntities;
+	std::vector<Nest*> nestEntities;
+	std::vector<Cloud*> cloudEntities;
+	std::shared_ptr<Entity> backgroundEntity;
+	Slider* alignmentControl, * cohesionControl, * separationControl;
+
+	bool mouseAttractActive = false;
+	glm::vec2 mouseAttractPos = glm::vec2(0.0f);
+	float mouseAttractRadius = 7.5f;
+	float mouseAttractStrength = 15.0f;
 
 	// Internal helpers
 	std::vector<Boid*> GetNearbyBoids(const Boid* boid);
 	glm::vec2 ComputeAlignment(const Boid* boid, const std::vector<Boid*>& neighbors);
 	glm::vec2 ComputeCohesion(const Boid* boid, const std::vector<Boid*>& neighbors);
 	glm::vec2 ComputeSeparation(const Boid* boid, const std::vector<Boid*>& neighbors);
-	glm::vec2 ComputeObstacleAvoidance(const Boid* boid);
+	glm::vec2 ComputeNestAttraction(const Boid* boid);
+	glm::vec2 ComputeMouseAttraction(const Boid* boid);
 	void ApplyEdgeAvoidance(Boid* boid, float deltaTime);
 
 	// Update logic

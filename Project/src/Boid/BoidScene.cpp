@@ -1,15 +1,19 @@
 #include "./BoidScene.h"
 
 #include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 #include <iostream>
+#include <algorithm>
 
+#include "../Engine/Renderer/Renderer.h"
 #include "../Engine/Renderer/TextureManager.h"
-#include <cstdlib>
+#include "../Engine/InputManager.h"
 
 BoidScene::BoidScene(Renderer* renderer) : Scene(renderer)
 {
-	backgroundColor = glm::vec3(0.75f, 1.0f, 1.0f);
+	backgroundColor = glm::vec3(0.375f, 0.7f, 1.0f);
 	updateFunction = [this](float deltaTime)
 		{
 			UpdateBoids(deltaTime);
@@ -28,14 +32,55 @@ void BoidScene::InitBoids(uint16_t count)
 	{
 		float x = static_cast<float>(rand() % (10*BOID_SCENE_W)) / 10.0f - BOID_SCENE_W / 2.0f;
 		float y = static_cast<float>(rand() % (10*BOID_SCENE_H)) / 10.0f - BOID_SCENE_H / 2.0f;
-		float speed = static_cast<float>((rand() % 50) + 50); // Speed between 50 and 100
+		float speed = static_cast<float>((rand() % 25) + 25); // Speed between 25 and 50
 		float angle = static_cast<float>(rand() % 360);
 		glm::vec2 velocity = glm::vec2(cosf(glm::radians(angle)), sinf(glm::radians(angle))) * speed;
 		auto boid = std::make_unique<Boid>(glm::vec2(x, y), velocity);
-		// Randomly assign to a scout group
-		boid->group = (rand() % 4); // 0, 1 or 2
-		boid->bias = 0.05f + static_cast<float>(rand()) / RAND_MAX * 0.05f; // Small bias
+		boidEntities.push_back(boid.get());
 		AddEntity(std::move(boid));
+
+		// assign each boid to a random nest
+		for (auto boid : boidEntities) {
+			boidNestMap[boid] = rand() % nestEntities.size();
+		}
+	}
+}
+
+void BoidScene::InitNests(uint16_t count)
+{
+	//randomly add nests within the scene bounds
+	for (uint16_t i = 0; i < count; ++i)
+	{
+		float x = static_cast<float>(rand() % (2 * (BOID_SCENE_W-1))) / 2.0f - (BOID_SCENE_W-1) / 2.0f;
+		float y = static_cast<float>(rand() % (2 * (BOID_SCENE_H-1))) / 2.0f - (BOID_SCENE_H-1) / 2.0f;
+		auto nest = std::make_unique<Nest>(glm::vec2(x, y));
+		nestEntities.push_back(nest.get());
+		AddEntity(std::move(nest));
+	}
+}
+
+void BoidScene::InitClouds(uint16_t count)
+{
+	//randomly add clouds within the scene bounds
+	for (uint16_t i = 0; i < count; ++i)
+	{
+		float x = static_cast<float>(rand() % (10 * BOID_SCENE_W)) / 5.0f - BOID_SCENE_W;
+		float y = static_cast<float>(rand() % (10 * (BOID_SCENE_H+5))) / 10.0f - (BOID_SCENE_H+5) / 2.0f;
+		float scale = static_cast<float>((rand() % 50) + 50) / 10.0f; // Scale between 5 and 10.0
+		float opacity = static_cast<float>((rand() % 76) + 25) / 100.0f; // Opacity between 0.25 and 1.0
+		float height = static_cast<float>((rand() % 50) + 50) / 50.0f; // Height between 1.0 and 2.0
+
+		auto cloud = new Cloud(glm::vec2(x, y), glm::vec2(scale, scale), opacity, height, leftBound*2, rightBound*2);
+		cloudEntities.push_back(cloud);
+	}
+
+	// sort clouds by height so that higher clouds are rendered later
+	std::sort(cloudEntities.begin(), cloudEntities.end(),
+		[](const Cloud* a, const Cloud* b) {
+			return a->getHeight() < b->getHeight();
+		});
+	for (auto& cloud : cloudEntities) {
+		AddEntity(std::move(std::unique_ptr<Cloud>(cloud)));
 	}
 }
 
@@ -64,6 +109,55 @@ std::shared_ptr<Mesh> BoidScene::CreateBoidMesh()
 	return std::make_shared<Mesh>(vertices, colors, texCoords, indices);
 }
 
+std::shared_ptr<Mesh> BoidScene::CreateNestMesh()
+{
+	std::vector<glm::vec2> vertices = {
+		{-0.5f,  0.0f},
+		{ 0.5f,  0.0f},
+		{ 0.3f, -0.25f},
+		{-0.3f, -0.25f},
+		{-0.4f,  0.0f},
+		{-0.3f, 0.25f},
+		{-0.2f, 0.25f},
+		{-0.1f, 0.0f},
+		{ 0.2f, 0.0f},
+		{ 0.25f, 0.125f},
+		{ 0.35f, 0.125f},
+		{ 0.4f, 0.0f},
+
+	};
+	std::vector<glm::vec3> colors = {
+		{1.0f, 1.0f, 1.0f},
+		{1.0f, 1.0f, 1.0f},
+		{1.0f, 1.0f, 1.0f},
+		{1.0f, 1.0f, 1.0f},
+		{1.0f, 1.0f, 1.0f},
+		{1.0f, 1.0f, 1.0f},
+		{1.0f, 1.0f, 1.0f},
+		{1.0f, 1.0f, 1.0f},
+		{1.0f, 1.0f, 1.0f},
+		{1.0f, 1.0f, 1.0f},
+		{1.0f, 1.0f, 1.0f},
+		{1.0f, 1.0f, 1.0f},
+	};
+	std::vector<glm::vec2> texCoords = {
+		{0.0f, 0.5f},
+		{1.0f, 0.5f},
+		{0.8f, 0.25f},
+		{0.2f, 0.25f},
+		{0.1f, 0.5f},
+		{0.2f, 0.75f},
+		{0.3f, 0.75f},
+		{0.4f, 0.5f},
+		{0.15f, 0.625f},
+		{0.2f, 0.75f},
+		{0.3f, 0.75f},
+		{0.35f, 0.625f},
+	};
+	std::vector<uint32_t> indices = { 0, 1, 2, 0, 2, 3, 4, 5, 6, 4, 6, 7, 8, 9, 10, 8, 10, 11 };
+	return std::make_shared<Mesh>(vertices, colors, texCoords, indices);
+}
+
 void BoidScene::AddBackground(std::shared_ptr<Mesh> mesh, std::shared_ptr<Texture> texture)
 {
 	backgroundEntity = std::make_shared<Entity>(mesh, glm::vec2(0.0f), glm::vec2(BOID_SCENE_W, BOID_SCENE_H), 0.0f, texture);
@@ -71,17 +165,74 @@ void BoidScene::AddBackground(std::shared_ptr<Mesh> mesh, std::shared_ptr<Textur
 	AddEntity(std::unique_ptr<Entity>(backgroundEntity.get()));
 }
 
+void BoidScene::AddControlEntities(std::shared_ptr<Mesh> mesh)
+{
+	auto sliderShader = renderer->GetShader("slider");
+	//get textures
+	auto alignTex = TextureManager::Load("textures/alignment.png");
+	auto cohTex = TextureManager::Load("textures/cohesion.png");
+	auto sepTex = TextureManager::Load("textures/separation.png");
+
+	float sliderWidth = 2.0f / 3.0f;
+	// add 3 rectangles (scaled from a square mesh) at the bottom of the scene to control alignment, cohesion, and separation weights
+	alignmentControl = new Slider(mesh, glm::vec2(-sliderWidth, -0.9f), glm::vec2(sliderWidth, 0.2f), 0.0f, alignTex, sliderShader, true, 0.0f, 2.0f);
+	cohesionControl = new Slider(mesh, glm::vec2(0.0f, -0.9f), glm::vec2(sliderWidth, 0.2f), 0.0f, cohTex, sliderShader, true, 0.0f, 2.0f);
+	separationControl = new Slider(mesh, glm::vec2(sliderWidth, -0.9f), glm::vec2(sliderWidth, 0.2f), 0.0f, sepTex, sliderShader, true, 0.0f, 2.0f);
+
+	//controls for sliders
+	alignmentControl->BindControl(alignmentWeight, '[', ']');
+	cohesionControl->BindControl(cohesionWeight, ';', '\'');
+	separationControl->BindControl(separationWeight, ',', '.');
+
+	AddEntity(std::unique_ptr<Entity>(alignmentControl));
+	AddEntity(std::unique_ptr<Entity>(cohesionControl));
+	AddEntity(std::unique_ptr<Entity>(separationControl));
+}
+
+void BoidScene::ToggleMouseAttractAt(const glm::vec2& worldPos)
+{
+	if (!mouseAttractActive)
+	{
+		mouseAttractPos = worldPos;
+		mouseAttractActive = true;
+	}
+	else
+	{
+		mouseAttractActive = false;
+	}
+}
+
+void BoidScene::SetMouseAttractPos(const glm::vec2& worldPos)
+{
+	mouseAttractPos = worldPos;
+}
+
+glm::vec2 BoidScene::ComputeMouseAttraction(const Boid* boid)
+{
+	if (!mouseAttractActive) return glm::vec2(0.0f);
+
+	glm::vec2 toMouse = mouseAttractPos - boid->position;
+	float dist = glm::length(toMouse);
+	if (dist <= 0.0001f) return glm::vec2(0.0f);
+
+	if (dist > mouseAttractRadius) return glm::vec2(0.0f);
+
+	// Strength falls off with distance (strong near, weaker at edge)
+	float falloff = 1.0f - (dist / mouseAttractRadius); // 1 at center, 0 at radius
+	glm::vec2 desired = glm::normalize(toMouse) * (mouseAttractStrength * falloff);
+	return desired - boid->velocity; // steering towards mouse
+}
+
 std::vector<Boid*> BoidScene::GetNearbyBoids(const Boid* boid)
 {
 	std::vector<Boid*> neighbors;
-	for (const auto& entity : entities)
+	for (const auto& entity : boidEntities)
 	{
-		Boid* other = dynamic_cast<Boid*>(entity.get());
-		if (other && other != boid)
+		if (entity != boid)
 		{
-			float dist = glm::length(other->position - boid->position);
+			float dist = glm::length(entity->position - boid->position);
 			if (dist < neighborRadius)
-				neighbors.push_back(other);
+				neighbors.push_back(entity);
 		}
 	}
 	return neighbors;
@@ -94,7 +245,7 @@ glm::vec2 BoidScene::ComputeAlignment(const Boid* boid, const std::vector<Boid*>
 	for (auto n : neighbors) avgVel += n->velocity;
 	avgVel /= static_cast<float>(neighbors.size());
 	avgVel = glm::normalize(avgVel) * maxSpeed;
-	return avgVel - boid->velocity; // Steering
+	return avgVel - boid->velocity; // steering
 }
 
 glm::vec2 BoidScene::ComputeCohesion(const Boid* boid, const std::vector<Boid*>& neighbors)
@@ -117,7 +268,7 @@ glm::vec2 BoidScene::ComputeSeparation(const Boid* boid, const std::vector<Boid*
 		if (dist < separationRadius && dist > 0)
 		{
 			glm::vec2 diff = glm::normalize(boid->position - n->position);
-			steer += diff / dist; // Stronger when closer
+			steer += diff / dist; // stronger when closer
 		}
 	}
 	if (glm::length(steer) > 0)
@@ -127,34 +278,26 @@ glm::vec2 BoidScene::ComputeSeparation(const Boid* boid, const std::vector<Boid*
 	return steer;
 }
 
-glm::vec2 BoidScene::ComputeObstacleAvoidance(const Boid* boid)
+glm::vec2 BoidScene::ComputeNestAttraction(const Boid* boid)
 {
-	glm::vec2 steer(0.0f);
-	for (const auto& obs : obstacles)
-	{
-		glm::vec2 toCenter = obs.center - boid->position;
-		float dist = glm::dot(toCenter, toCenter);
-		float avoidRadius = (obs.radius + obstacleAvoidDistance) * (obs.radius + obstacleAvoidDistance);
+	int nestIndex = boidNestMap[boid];
+	Nest* nest = nestEntities[nestIndex];
 
-		// If inside avoid radius, push away proportional to penetration
-		if (dist < avoidRadius && dist > 0.0001f)
-		{
-			// Direction away from obstacle center
-			glm::vec2 away = glm::normalize(boid->position - obs.center);
+	// Attraction towards nest center
+	glm::vec2 toNest = nest->position - boid->position;
+	float dist = glm::length(toNest);
 
-			// Strength increases as we get closer (penetration proportion)
-			float penetration = (sqrt(avoidRadius) - sqrt(dist)) / sqrt(avoidRadius);
-			glm::vec2 desired = away * (maxSpeed * penetration);
+	glm::vec2 attract(0.0f);
+	if (dist > 0.01f) {
+		attract = glm::normalize(toNest) * nestAttractStrength;
 
-			// Steering = desired velocity - current velocity (consistent with other steering implementations)
-			glm::vec2 localSteer = desired - boid->velocity;
-			steer += localSteer;
+		//  if inside nest radius, orbit around it instead of heading straight in
+		if (dist < nestRadius) {
+			glm::vec2 tangent = glm::normalize(glm::vec2(-toNest.y, toNest.x)); // perpendicular
+			attract += tangent * (nestAttractStrength * 0.5f); // swirl effect
 		}
 	}
-	// Clamp steering magnitude similar to other forces
-	if (glm::length(steer) > maxForce)
-		steer = glm::normalize(steer) * maxForce;
-	return steer;
+	return attract;
 }
 
 void BoidScene::ApplyEdgeAvoidance(Boid* boid, float deltaTime)
@@ -185,18 +328,35 @@ void BoidScene::ApplyEdgeAvoidance(Boid* boid, float deltaTime)
 
 void BoidScene::UpdateBoids(float deltaTime)
 {
-	for (auto& entity : entities)
+	timeSinceRetarget += deltaTime;
+	if (timeSinceRetarget >= nestRetargetInterval) {
+		timeSinceRetarget = 0.0f;
+
+		// randomly reassign the nest of a random boid and its neighbors
+		Entity* randomBoid = GetRandomBoid();
+		if (randomBoid) {
+			int newNestIndex = rand() % nestEntities.size();
+			boidNestMap[static_cast<Boid*>(randomBoid)] = newNestIndex;
+			auto neighbors = GetNearbyBoids(static_cast<Boid*>(randomBoid));
+			for (auto neighbor : neighbors) {
+				boidNestMap[neighbor] = newNestIndex;
+			}
+		}
+	}
+
+
+	for (auto& boid : boidEntities)
 	{
-		Boid* boid = dynamic_cast<Boid*>(entity.get());
-		if (!boid) continue;
 
 		auto neighbors = GetNearbyBoids(boid);
 
 		glm::vec2 align = ComputeAlignment(boid, neighbors) * alignmentWeight;
 		glm::vec2 coh = ComputeCohesion(boid, neighbors) * cohesionWeight;
 		glm::vec2 sep = ComputeSeparation(boid, neighbors) * separationWeight;
+		glm::vec2 nestAttract = ComputeNestAttraction(boid);
+		glm::vec2 mouseAttract = ComputeMouseAttraction(boid);
 
-		glm::vec2 accel = align + coh + sep;
+		glm::vec2 accel = align + coh + sep + nestAttract + mouseAttract;
 		if (glm::length(accel) > maxForce)
 			accel = glm::normalize(accel) * maxForce;
 
@@ -204,30 +364,8 @@ void BoidScene::UpdateBoids(float deltaTime)
 
 		ApplyEdgeAvoidance(boid, deltaTime);
 
-		if (boid->group == 1) {
-			if (boid->velocity.x > 0.0f)
-				boid->bias = std::min(max_bias, boid->bias + bias_increment);
-			else
-				boid->bias = std::max(bias_increment, boid->bias - bias_increment);
-		}
-		if (boid->group == 2) {
-			if (boid->velocity.x < 0.0f)
-				boid->bias = std::min(max_bias, boid->bias + bias_increment);
-			else
-				boid->bias = std::max(bias_increment, boid->bias - bias_increment);
-		}
-
-		if (boid->group == 1) {
-			// Biased to the right
-			boid->velocity.x = (1.0f - boid->bias) * boid->velocity.x + (boid->bias * 1.0f);
-		}
-		else if (boid->group == 2) {
-			// Biased to the left
-			boid->velocity.x = (1.0f - boid->bias) * boid->velocity.x - boid->bias;
-		}
-
 		float speed = glm::length(boid->velocity);
-		if (speed > 0.0f) // Avoid division by zero
+		if (speed > 0.0f) // avoid division by zero
 		{
 			if (speed < minSpeed)
 				boid->velocity = glm::normalize(boid->velocity) * minSpeed;
@@ -241,148 +379,24 @@ void BoidScene::UpdateBoids(float deltaTime)
 	}
 }
 
-Entity* BoidScene::GetRandomBoid()
-{
-	std::vector<Boid*> boids;
-	for (const auto& entity : entities)
-	{
-		Boid* boid = dynamic_cast<Boid*>(entity.get());
-		if (boid)
-			boids.push_back(boid);
-	}
-	if (boids.empty()) return nullptr;
-	int index = rand() % boids.size();
-	return boids[index];
-}
-
-void BoidScene::InitClouds(uint16_t count)
-{
-	std::vector<glm::vec2> vertices = { {-0.5f,-0.5f}, {0.5f,-0.5f}, {0.5f,0.5f}, {-0.5f,0.5f} };
-	std::vector<glm::vec3> colors = { {1,1,1}, {1,1,1}, {1,1,1}, {1,1,1} };
-	std::vector<glm::vec2> texCoords = { {0,0}, {1,0}, {1,1}, {0,1} };
-	std::vector<uint32_t> indices = { 0,1,2, 2,3,0 };
-	std::shared_ptr<Mesh> quad = std::make_shared<Mesh>(vertices, colors, texCoords, indices);
-
-	// Distribute clouds into 3 groups -> group 1 = High (farthest), 2 = Mid, 3 = Low (nearest)
-	int highCount = count * 50 / 100; // 50%
-	int midCount = count * 35 / 100; // 35%
-	int lowCount = count - highCount - midCount; // remaining 15%
-
-	// Add back-to-front: High (1) first, then Mid (2), then Low (3) last
-	const int addOrder[3] = { 1, 2, 3 };
-	const int groupCounts[3] = { highCount, midCount, lowCount };
-
-	int cloudIndex = 0;
-	for (int orderIdx = 0; orderIdx < 3; ++orderIdx)
-	{
-		int group = addOrder[orderIdx];
-		int thisGroupCount = groupCounts[orderIdx];
-
-		for (int i = 0; i < thisGroupCount; ++i)
-		{
-			// Randomize position and properties
-			float x = leftBound + static_cast<float>(rand()) / static_cast<float>(RAND_MAX) * (rightBound - leftBound);
-			float y = bottomBound + static_cast<float>(rand()) / static_cast<float>(RAND_MAX) * (topBound - bottomBound);
-
-			float scaleMin, scaleMax, speedMin, speedMax, opacityMin, opacityMax;
-			if (group == 1) { // High
-				scaleMin = cloudMinScale[0]; scaleMax = cloudMaxScale[0];
-				speedMin = cloudMinSpeed[0]; speedMax = cloudMaxSpeed[0];
-				opacityMin = cloudMinOpacity[0]; opacityMax = cloudMaxOpacity[0];
-			}
-			else if (group == 2) { // Mid
-				scaleMin = cloudMinScale[1]; scaleMax = cloudMaxScale[1];
-				speedMin = cloudMinSpeed[1]; speedMax = cloudMaxSpeed[1];
-				opacityMin = cloudMinOpacity[1]; opacityMax = cloudMaxOpacity[1];
-			}
-			else { // Low
-				scaleMin = cloudMinScale[2]; scaleMax = cloudMaxScale[2];
-				speedMin = cloudMinSpeed[2]; speedMax = cloudMaxSpeed[2];
-				opacityMin = cloudMinOpacity[2]; opacityMax = cloudMaxOpacity[2];
-			}
-
-			float scale = scaleMin + (static_cast<float>(rand()) / static_cast<float>(RAND_MAX)) * (scaleMax - scaleMin);
-			float opacity = opacityMin + (static_cast<float>(rand()) / static_cast<float>(RAND_MAX)) * (opacityMax - opacityMin);
-			float speed = speedMin + (static_cast<float>(rand()) / static_cast<float>(RAND_MAX)) * (speedMax - speedMin);
-
-			// Random texture
-			int texIndex = 1 + (rand() % 10);
-			char path[128];
-			snprintf(path, sizeof(path), "textures/cloud%02d.png", texIndex);
-			auto tex = TextureManager::Load(path);
-
-			auto cloudEntity = std::make_unique<Entity>(quad, glm::vec2(x, y), glm::vec2(scale, scale), 0.0f, tex);
-			cloudEntity->useTexture = true;
-			cloudEntity->transparency = opacity;
-
-			Entity* rawPtr = cloudEntity.get();
-			AddEntity(std::move(cloudEntity));
-			clouds.push_back({ rawPtr, speed, group });
-			++cloudIndex;
-		}
-	}
-}
-
 void BoidScene::UpdateClouds(float deltaTime)
 {
-	for (auto& c : clouds)
+	for (auto& cloud : cloudEntities)
 	{
-		if (!c.entity) continue;
-		c.entity->position.x += c.speed * deltaTime;
-
-		// Wrapped behavior: when cloud goes beyond rightBound, place it at leftBound with new random Y and group-specific properties
-		if (c.entity->position.x - (c.entity->scale.x * 0.5f) > rightBound + 1.0f)
-		{
-			c.entity->position.x = leftBound - 5.0f; // Place far to the left to avoid pop-ins upon reapperance
-			c.entity->position.y = bottomBound + static_cast<float>(rand()) / static_cast<float>(RAND_MAX) * (topBound - bottomBound);
-
-			// Re-apply group-specific ranges
-			int group = c.group;
-			float scaleMin, scaleMax, speedMin, speedMax, opacityMin, opacityMax;
-			if (group == 1) { // High
-				scaleMin = cloudMinScale[0]; scaleMax = cloudMaxScale[0];
-				speedMin = cloudMinSpeed[0]; speedMax = cloudMaxSpeed[0];
-				opacityMin = cloudMinOpacity[0]; opacityMax = cloudMaxOpacity[0];
-			}
-			else if (group == 2) { // Mid
-				scaleMin = cloudMinScale[1]; scaleMax = cloudMaxScale[1];
-				speedMin = cloudMinSpeed[1]; speedMax = cloudMaxSpeed[1];
-				opacityMin = cloudMinOpacity[1]; opacityMax = cloudMaxOpacity[1];
-			}
-			else { // Low
-				scaleMin = cloudMinScale[2]; scaleMax = cloudMaxScale[2];
-				speedMin = cloudMinSpeed[2]; speedMax = cloudMaxSpeed[2];
-				opacityMin = cloudMinOpacity[2]; opacityMax = cloudMaxOpacity[2];
-			}
-
-			// Randomize new properties within the group's ranges
-			c.speed = speedMin + (static_cast<float>(rand()) / static_cast<float>(RAND_MAX)) * (speedMax - speedMin);
-			c.entity->transparency = opacityMin + (static_cast<float>(rand()) / static_cast<float>(RAND_MAX)) * (opacityMax - opacityMin);
-			float newScale = scaleMin + (static_cast<float>(rand()) / static_cast<float>(RAND_MAX)) * (scaleMax - scaleMin);
-			c.entity->scale = glm::vec2(newScale, newScale);
-
-			// Randomize texture
-			int texIndex = 1 + (rand() % 10);
-			char path[128];
-			snprintf(path, sizeof(path), "textures/cloud%02d.png", texIndex);
-			c.entity->SetTexture(TextureManager::Load(path));
-		}
+		cloud->Update(deltaTime);
 	}
 }
 
-void BoidScene::ClearClouds()
+Entity* BoidScene::GetRandomBoid()
 {
-	clouds.clear();
-	// Entities vector still owns the cloud Entities; user can decide to clear them if needed.
+	if (boidEntities.empty()) return nullptr;
+	int index = rand() % boidEntities.size();
+	return boidEntities[index];
 }
 
-// Public obstacle API
-void BoidScene::AddObstacle(const glm::vec2& center, float radius)
+Entity* BoidScene::GetRandomNest()
 {
-	obstacles.push_back({ center, radius });
-}
-
-void BoidScene::ClearObstacles()
-{
-	obstacles.clear();
+	if (nestEntities.empty()) return nullptr;
+	int index = rand() % nestEntities.size();
+	return nestEntities[index];
 }

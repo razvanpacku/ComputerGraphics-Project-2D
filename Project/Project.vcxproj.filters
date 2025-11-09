@@ -156,6 +156,12 @@
     <ClCompile Include="src\Boid\BoidScene.cpp">
       <Filter>Source Files\Boid</Filter>
     </ClCompile>
+    <ClCompile Include="src\Engine\InputManager.cpp">
+      <Filter>Source Files\Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Boid\Slider.cpp">
+      <Filter>Source Files\Boid</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\SOIL.h">
@@ -1079,6 +1085,12 @@
     <ClInclude Include="src\Boid\BoidScene.h">
       <Filter>Header Files\Boid</Filter>
     </ClInclude>
+    <ClInclude Include="src\Engine\InputManager.h">
+      <Filter>Header Files\Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Boid\Slider.h">
+      <Filter>Header Files\Boid</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Text Include="include\glm\CMakeLists.txt">
@@ -1558,6 +1570,12 @@
       <Filter>Resource Files\shaders</Filter>
     </None>
     <None Include="src\shaders\base.vert">
+      <Filter>Resource Files\shaders</Filter>
+    </None>
+    <None Include="src\shaders\slider.frag">
+      <Filter>Resource Files\shaders</Filter>
+    </None>
+    <None Include="src\shaders\slider.vert">
       <Filter>Resource Files\shaders</Filter>
     </None>
   </ItemGroup>

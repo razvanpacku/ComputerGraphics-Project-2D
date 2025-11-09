@@ -10,7 +10,7 @@
 
 #include <unordered_map>
 
-//Forward declarations
+//forward declarations
 class App;
 
 #define DEFAULT_CLEAR_COLOR_R 0.75f
@@ -31,6 +31,9 @@ public:
 	std::shared_ptr<Mesh> AddMesh(const std::string& name, std::shared_ptr<Mesh> mesh);
 	std::shared_ptr<Mesh> GetMesh(const std::string& name) const;
 
+	std::shared_ptr<Shader> AddShader(const std::string& name, const std::string& vertPath, const std::string& fragPath);
+	std::shared_ptr<Shader> GetShader(const std::string& name) const;
+
 	void Update() const;
 	
 	void RenderEntity(const Entity& entity) const;
@@ -47,15 +50,15 @@ private:
 	App* app;
 
 	std::unordered_map<std::string, std::shared_ptr<Mesh>> meshCache;
+	std::unordered_map<std::string, std::shared_ptr<Shader>> shaderCache;
 
-	Shader* shader;
-	Shader* activeShader = nullptr;
+	Shader* baseShader;
 
 	Camera* camera = nullptr;
 
 	Scene* scene = nullptr;
 
-	//Temporary static variables, move to another file later
+	//temporary static variables, move to another file later
 	void CreateShaders(void);
 };
 
