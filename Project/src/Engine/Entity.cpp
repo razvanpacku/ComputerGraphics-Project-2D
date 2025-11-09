@@ -21,6 +21,7 @@ glm::mat4 Entity::GetModelMatrix() const
 void Entity::ApplyUniforms(Shader& shader) const{
     shader.setMat4("model", GetModelMatrix());
     shader.setBool("useTexture", useTexture);
+	shader.setFloat("opacity", opacity);
 }
 
 void Entity::Draw() const

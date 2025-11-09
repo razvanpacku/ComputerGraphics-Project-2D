@@ -20,6 +20,8 @@ public:
 	float rotation;
 	glm::vec2 scale;
 
+	float opacity = 1.0f;
+
 	bool useTexture = true;
 	bool isGUI = false;
 

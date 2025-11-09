@@ -183,6 +183,8 @@ xcopy /y /d "$(ProjectDir)lib\x64\SOIL\*.dll" "$(OutDir)" &amp;</Command>
     <ClCompile Include="main.cpp" />
     <ClCompile Include="src\Boid\Boid.cpp" />
     <ClCompile Include="src\Boid\BoidScene.cpp" />
+    <ClCompile Include="src\Boid\Cloud.cpp" />
+    <ClCompile Include="src\Boid\Nest.cpp" />
     <ClCompile Include="src\Boid\Slider.cpp" />
     <ClCompile Include="src\Engine\App.cpp" />
     <ClCompile Include="src\Engine\Entity.cpp" />
@@ -497,6 +499,8 @@ xcopy /y /d "$(ProjectDir)lib\x64\SOIL\*.dll" "$(OutDir)" &amp;</Command>
     <ClInclude Include="include\SOIL.h" />
     <ClInclude Include="src\Boid\Boid.h" />
     <ClInclude Include="src\Boid\BoidScene.h" />
+    <ClInclude Include="src\Boid\Cloud.h" />
+    <ClInclude Include="src\Boid\Nest.h" />
     <ClInclude Include="src\Boid\Slider.h" />
     <ClInclude Include="src\Engine\App.h" />
     <ClInclude Include="src\Engine\Entity.h" />

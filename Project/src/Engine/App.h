@@ -18,7 +18,7 @@ public:
 
 	void Update();
 
-	void SetEntityTracking();
+	void SetEntityTracking(bool boidOrNest = false);
 
 	void Run();
 private:
