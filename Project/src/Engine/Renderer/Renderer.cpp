@@ -5,29 +5,32 @@
 #include "Util/loadShaders.h"
 
 #include "../App.h"
+#include "../InputManager.h"
 
 void Renderer::CreateShaders(void)
 {
-	shader = new Shader("shaders/base.vert", "shaders/base.frag");
-	shader->Use();
+	AddShader("slider", "shaders/slider.vert", "shaders/slider.frag");
+	auto _baseShader = AddShader("base", "shaders/base.vert", "shaders/base.frag");
+	baseShader = _baseShader.get();
 }
 
 Renderer::Renderer(App* app) : app(app)
 {
 	Init();
-
-	activeShader = shader;
 }
 
 Renderer::~Renderer()
 {
 	meshCache.clear();
-	delete shader;
+	shaderCache.clear();
 }
 
 void Renderer::Init()
 {
 	static Renderer* self = (Renderer*)this;
+
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	if (scene) {
 		glClearColor(scene->backgroundColor.r, scene->backgroundColor.g, scene->backgroundColor.b, 1.0f);
@@ -41,27 +44,25 @@ void Renderer::Init()
 
 		glutSwapBuffers();
 		});
-	glutCloseFunc([]() {
-		self->Cleanup();
-		});
 
 	glutIdleFunc([]() {
 		glutPostRedisplay(); 
+		});
+
+	glutCloseFunc([]() {
+		self->Cleanup();
 		});
 
 	glutKeyboardFunc([](unsigned char key, int x, int y) {
 		if (key == 27) { // ESC key
 			glutLeaveMainLoop();
 		}
-		else if (key == 't') {
-			//track entity
-			self->app->SetEntityTracking();
-		}
+		InputManager::OnKeyPress(key);
 		});
 
 
 	glutMouseWheelFunc([](int wheel, int direction, int x, int y) {
-		self->camera->ProcessMouseScroll(direction);
+		InputManager::OnMouseWheel(direction);
 		});
 
 	CreateShaders();
@@ -84,7 +85,7 @@ std::shared_ptr<Mesh> Renderer::AddMesh(const std::string& name, std::shared_ptr
 		meshCache[name] = mesh;
 		return mesh;
 	}
-	return nullptr;
+	return meshCache[name];
 }
 
 std::shared_ptr<Mesh> Renderer::GetMesh(const std::string& name) const
@@ -96,6 +97,24 @@ std::shared_ptr<Mesh> Renderer::GetMesh(const std::string& name) const
 	return nullptr;
 }
 
+std::shared_ptr<Shader> Renderer::AddShader(const std::string& name, const std::string& vertPath, const std::string& fragPath)
+{
+	if (shaderCache.find(name) == shaderCache.end()) {
+		auto sh = std::make_shared<Shader>(vertPath.c_str(), fragPath.c_str());
+		shaderCache[name] = sh;
+		return sh;
+	}
+	return shaderCache[name];
+}
+
+std::shared_ptr<Shader> Renderer::GetShader(const std::string& name) const
+{
+	auto it = shaderCache.find(name);
+	if (it != shaderCache.end())
+		return it->second;
+	return nullptr;
+}
+
 void Renderer::Update() const
 {
 	app->Update();
@@ -103,9 +122,30 @@ void Renderer::Update() const
 
 void Renderer::RenderEntity(const Entity& entity) const
 {
-	//set up shader uniforms here
-	activeShader->setMat4("model", entity.GetModelMatrix());
-	activeShader->setBool("useTexture", entity.useTexture);
+	std::shared_ptr<Shader> useShader = entity.GetShader();
+	if (!useShader)
+		useShader = std::shared_ptr<Shader>(baseShader, [](Shader*) {}); // non-owning reference
+
+	useShader->Use();
+
+	if (entity.isGUI)
+	{
+		// GUI
+		glm::mat4 view = glm::mat4(1.0f);
+		glm::mat4 proj = glm::mat4(1.0f);
+
+		useShader->setMat4("view", view);
+		useShader->setMat4("projection", proj);
+	}
+	else
+	{
+		// Regular world-space entity
+		useShader->setMat4("view", camera->GetViewMatrix());
+		useShader->setMat4("projection", camera->GetProjectionMatrix());
+	}
+
+	entity.ApplyUniforms(*useShader);
+
 	//draw the entity
 	entity.Draw();
 }
@@ -115,13 +155,6 @@ void Renderer::Render() const
 	if (!camera || !scene) return;
 
 	Clear();
-
-	activeShader->Use();
-
-	glm::mat4 view = camera->GetViewMatrix();
-	glm::mat4 proj = camera->GetProjectionMatrix();
-	activeShader->setMat4("view", view);
-	activeShader->setMat4("projection", proj);
 
 	//do rendering here
 	scene->Render();

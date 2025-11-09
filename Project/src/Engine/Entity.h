@@ -4,6 +4,7 @@
 
 #include "Renderer/Mesh.h"
 #include "Renderer/Texture.h"
+#include "Renderer/Shader.h"
 
 #include <memory>
 
@@ -11,20 +12,31 @@
 class Entity
 {
 public:
-	Entity(std::shared_ptr<Mesh> mesh, const glm::vec2& position = glm::vec2(0.0f), const glm::vec2& scale = glm::vec2(1.0f), float rotation = 0.0f, std::shared_ptr<Texture> texture = nullptr);
+	Entity(std::shared_ptr<Mesh> mesh, const glm::vec2& position = glm::vec2(0.0f), const glm::vec2& scale = glm::vec2(1.0f), float rotation = 0.0f, std::shared_ptr<Texture> texture = nullptr, std::shared_ptr<Shader> shader = nullptr,
+		bool isGUI = false);
 	virtual ~Entity();
 
 	glm::vec2 position;
 	float rotation;
 	glm::vec2 scale;
 
+	float opacity = 1.0f;
+
 	bool useTexture = true;
+	bool isGUI = false;
+
 	void SetTexture(std::shared_ptr<Texture> tex) { texture = tex; }
+	void SetShader(std::shared_ptr<Shader> sh) { shader = sh; }
+
+	virtual void ApplyUniforms(Shader& shader) const;
+
+	std::shared_ptr<Shader> GetShader() const { return shader; }
 
 	glm::mat4 GetModelMatrix() const;
 	void Draw() const;
 private:
 	std::shared_ptr<Mesh> mesh;
 	std::shared_ptr<Texture> texture = nullptr;
+	std::shared_ptr<Shader> shader = nullptr;
 };
 
