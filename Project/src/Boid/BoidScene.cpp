@@ -1,6 +1,8 @@
 #include "./BoidScene.h"
 
 #include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 #include <iostream>
 #include <algorithm>
@@ -65,7 +67,7 @@ void BoidScene::InitClouds(uint16_t count)
 		float x = static_cast<float>(rand() % (10 * BOID_SCENE_W)) / 5.0f - BOID_SCENE_W;
 		float y = static_cast<float>(rand() % (10 * (BOID_SCENE_H+5))) / 10.0f - (BOID_SCENE_H+5) / 2.0f;
 		float scale = static_cast<float>((rand() % 50) + 50) / 10.0f; // Scale between 5 and 10.0
-		float opacity = static_cast<float>((rand() % 50) + 50) / 100.0f; // Opacity between 0.1 and 1.0
+		float opacity = static_cast<float>((rand() % 76) + 25) / 100.0f; // Opacity between 0.25 and 1.0
 		float height = static_cast<float>((rand() % 50) + 50) / 50.0f; // Height between 1.0 and 2.0
 
 		auto cloud = new Cloud(glm::vec2(x, y), glm::vec2(scale, scale), opacity, height, leftBound*2, rightBound*2);
@@ -187,6 +189,40 @@ void BoidScene::AddControlEntities(std::shared_ptr<Mesh> mesh)
 	AddEntity(std::unique_ptr<Entity>(separationControl));
 }
 
+void BoidScene::ToggleMouseAttractAt(const glm::vec2& worldPos)
+{
+	if (!mouseAttractActive)
+	{
+		mouseAttractPos = worldPos;
+		mouseAttractActive = true;
+	}
+	else
+	{
+		mouseAttractActive = false;
+	}
+}
+
+void BoidScene::SetMouseAttractPos(const glm::vec2& worldPos)
+{
+	mouseAttractPos = worldPos;
+}
+
+glm::vec2 BoidScene::ComputeMouseAttraction(const Boid* boid)
+{
+	if (!mouseAttractActive) return glm::vec2(0.0f);
+
+	glm::vec2 toMouse = mouseAttractPos - boid->position;
+	float dist = glm::length(toMouse);
+	if (dist <= 0.0001f) return glm::vec2(0.0f);
+
+	if (dist > mouseAttractRadius) return glm::vec2(0.0f);
+
+	// Strength falls off with distance
+	float falloff = 1.0f - (dist / mouseAttractRadius); // 1 at center, 0 at radius
+	glm::vec2 desired = glm::normalize(toMouse) * (mouseAttractStrength * falloff);
+	return desired;
+}
+
 std::vector<Boid*> BoidScene::GetNearbyBoids(const Boid* boid)
 {
 	std::vector<Boid*> neighbors;
@@ -253,12 +289,12 @@ glm::vec2 BoidScene::ComputeNestAttraction(const Boid* boid)
 
 	glm::vec2 attract(0.0f);
 	if (dist > 0.01f) {
-		attract = glm::normalize(toNest) * attractStrength;
+		attract = glm::normalize(toNest) * nestAttractStrength;
 
 		//  if inside nest radius, orbit around it instead of heading straight in
 		if (dist < nestRadius) {
 			glm::vec2 tangent = glm::normalize(glm::vec2(-toNest.y, toNest.x)); // perpendicular
-			attract += tangent * (attractStrength * 0.5f); // swirl effect
+			attract += tangent * (nestAttractStrength * 0.5f); // swirl effect
 		}
 	}
 	return attract;
@@ -318,8 +354,9 @@ void BoidScene::UpdateBoids(float deltaTime)
 		glm::vec2 coh = ComputeCohesion(boid, neighbors) * cohesionWeight;
 		glm::vec2 sep = ComputeSeparation(boid, neighbors) * separationWeight;
 		glm::vec2 nestAttract = ComputeNestAttraction(boid);
+		glm::vec2 mouseAttract = ComputeMouseAttraction(boid);
 
-		glm::vec2 accel = align + coh + sep + nestAttract;
+		glm::vec2 accel = align + coh + sep + nestAttract + mouseAttract;
 		if (glm::length(accel) > maxForce)
 			accel = glm::normalize(accel) * maxForce;
 
