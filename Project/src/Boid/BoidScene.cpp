@@ -217,10 +217,10 @@ glm::vec2 BoidScene::ComputeMouseAttraction(const Boid* boid)
 
 	if (dist > mouseAttractRadius) return glm::vec2(0.0f);
 
-	// Strength falls off with distance (strong near, weaker at edge)
+	// Strength falls off with distance
 	float falloff = 1.0f - (dist / mouseAttractRadius); // 1 at center, 0 at radius
 	glm::vec2 desired = glm::normalize(toMouse) * (mouseAttractStrength * falloff);
-	return desired - boid->velocity; // steering towards mouse
+	return desired;
 }
 
 std::vector<Boid*> BoidScene::GetNearbyBoids(const Boid* boid)

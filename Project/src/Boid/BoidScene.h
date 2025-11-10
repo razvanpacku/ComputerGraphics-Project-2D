@@ -70,6 +70,10 @@ private:
 	float timeSinceRetarget = 0.0f;
 	std::unordered_map<const Boid*, int> boidNestMap; // which nest each boid is bound to
 
+	bool mouseAttractActive = false;
+	glm::vec2 mouseAttractPos = glm::vec2(0.0f);
+	float mouseAttractRadius = 3.0f;
+	float mouseAttractStrength = 30.0f;
 
 	// Entities
 	std::vector<Boid*> boidEntities;
@@ -77,11 +81,6 @@ private:
 	std::vector<Cloud*> cloudEntities;
 	std::shared_ptr<Entity> backgroundEntity;
 	Slider* alignmentControl, * cohesionControl, * separationControl;
-
-	bool mouseAttractActive = false;
-	glm::vec2 mouseAttractPos = glm::vec2(0.0f);
-	float mouseAttractRadius = 7.5f;
-	float mouseAttractStrength = 15.0f;
 
 	// Internal helpers
 	std::vector<Boid*> GetNearbyBoids(const Boid* boid);

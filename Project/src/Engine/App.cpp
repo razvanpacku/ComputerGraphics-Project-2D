@@ -42,14 +42,14 @@ App::App(const std::string& name, uint16_t width, uint16_t height)
 			Camera* cam = renderer->GetCamera();
 			if (!cam) return;
 
-			// Flip Y because GLUT y=0 is top, glm expects bottom-left origin
+			// Flip Y
 			float winX = static_cast<float>(x);
 			float winY = static_cast<float>(window->GetHeight() - y);
 
 			glm::vec4 viewport(0.0f, 0.0f, static_cast<float>(window->GetWidth()), static_cast<float>(window->GetHeight()));
 
 			// glm::unProject expects model (modelview) and proj matrices.
-			// Pass view matrix as the "model" param (i.e. modelview = view * model(=I))
+			// Pass view matrix as the "model" param
 			glm::vec3 winPos(winX, winY, 0.0f);
 
 			glm::vec3 worldPos = glm::unProject(winPos, cam->GetViewMatrix(), cam->GetProjectionMatrix(), viewport);
