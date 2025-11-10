@@ -8,6 +8,10 @@
 #include <cmath>
 #include <ctime>
 
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
 int32_t App::argc = 0;
 char** App::argv = nullptr;
 
@@ -31,8 +35,61 @@ App::App(const std::string& name, uint16_t width, uint16_t height)
 	InputManager::RegisterKeyAction('y', [this]() {
 		this->SetEntityTracking(true);
 		});
+	InputManager::RegisterMouseButtonAction([this](int button, int state, int x, int y) {
+		if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN)
+		{
+			// Convert screen (x,y) to world coordinates
+			Camera* cam = renderer->GetCamera();
+			if (!cam) return;
 
-	//load textures
+			// Flip Y
+			float winX = static_cast<float>(x);
+			float winY = static_cast<float>(window->GetHeight() - y);
+
+			glm::vec4 viewport(0.0f, 0.0f, static_cast<float>(window->GetWidth()), static_cast<float>(window->GetHeight()));
+
+			// glm::unProject expects model (modelview) and proj matrices.
+			// Pass view matrix as the "model" param
+			glm::vec3 winPos(winX, winY, 0.0f);
+
+			glm::vec3 worldPos = glm::unProject(winPos, cam->GetViewMatrix(), cam->GetProjectionMatrix(), viewport);
+
+			// Toggle mouse attract in the BoidScene
+			Scene* sc = renderer->GetScene();
+			if (sc)
+			{
+				BoidScene* bs = dynamic_cast<BoidScene*>(sc);
+				if (bs)
+				{
+					bs->ToggleMouseAttractAt(glm::vec2(worldPos.x, worldPos.y));
+				}
+			}
+		}
+		});
+
+	// Update attract point continuously while mouse-attract mode is active
+	InputManager::RegisterCursorPosAction([this](int x, int y) {
+		Camera* cam = renderer->GetCamera();
+		if (!cam) return;
+
+		float winX = static_cast<float>(x);
+		float winY = static_cast<float>(window->GetHeight() - y);
+		glm::vec4 viewport(0.0f, 0.0f, static_cast<float>(window->GetWidth()), static_cast<float>(window->GetHeight()));
+		glm::vec3 winPos(winX, winY, 0.0f);
+		glm::vec3 worldPos = glm::unProject(winPos, cam->GetViewMatrix(), cam->GetProjectionMatrix(), viewport);
+
+		Scene* sc = renderer->GetScene();
+		if (sc)
+		{
+			BoidScene* bs = dynamic_cast<BoidScene*>(sc);
+			if (bs && bs->IsMouseAttractActive())
+			{
+				bs->SetMouseAttractPos(glm::vec2(worldPos.x, worldPos.y));
+			}
+		}
+		});
+
+	//Load textures
 	auto tex1 = TextureManager::Load("textures/dev.png");
 	auto nestTex = TextureManager::Load("textures/nest.png");
 	auto boidTex = TextureManager::Load("textures/boid.png");

@@ -34,6 +34,10 @@ public:
 	void AddBackground(std::shared_ptr<Mesh> mesh, std::shared_ptr<Texture> texture);
 	void AddControlEntities(std::shared_ptr<Mesh> mesh);
 
+	void ToggleMouseAttractAt(const glm::vec2& worldPos);
+	void SetMouseAttractPos(const glm::vec2& worldPos);
+	bool IsMouseAttractActive() const { return mouseAttractActive; }
+
 	Entity* GetRandomBoid();
 	Entity* GetRandomNest();
 private:
@@ -61,11 +65,15 @@ private:
 	float max_bias = 0.05f;        // Maximum bias value
 
 	float nestRadius = 0.5f;
-	float attractStrength = 3.0f;
+	float nestAttractStrength = 3.0f;
 	float nestRetargetInterval = 5.0f;  // seconds between random reassignments
 	float timeSinceRetarget = 0.0f;
 	std::unordered_map<const Boid*, int> boidNestMap; // which nest each boid is bound to
 
+	bool mouseAttractActive = false;
+	glm::vec2 mouseAttractPos = glm::vec2(0.0f);
+	float mouseAttractRadius = 3.0f;
+	float mouseAttractStrength = 30.0f;
 
 	// Entities
 	std::vector<Boid*> boidEntities;
@@ -80,6 +88,7 @@ private:
 	glm::vec2 ComputeCohesion(const Boid* boid, const std::vector<Boid*>& neighbors);
 	glm::vec2 ComputeSeparation(const Boid* boid, const std::vector<Boid*>& neighbors);
 	glm::vec2 ComputeNestAttraction(const Boid* boid);
+	glm::vec2 ComputeMouseAttraction(const Boid* boid);
 	void ApplyEdgeAvoidance(Boid* boid, float deltaTime);
 
 	// Update logic

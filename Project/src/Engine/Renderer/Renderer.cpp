@@ -61,6 +61,18 @@ void Renderer::Init()
 		});
 
 
+	glutMouseFunc([](int button, int state, int x, int y) {
+		InputManager::OnMouseButton(button, state, x, y);
+		});
+
+	glutMotionFunc([](int x, int y) {
+		InputManager::OnCursorPos(x, y);
+		});
+
+	glutPassiveMotionFunc([](int x, int y) {
+		InputManager::OnCursorPos(x, y);
+		});
+
 	glutMouseWheelFunc([](int wheel, int direction, int x, int y) {
 		InputManager::OnMouseWheel(direction);
 		});
