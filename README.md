@@ -12,7 +12,9 @@ A simple 2D Boids demo using OpenGL.
 
 ## Overview
 
-This demo implements a 2D boids simulation, with the inclusion of nests that the boids get attracted to. There are zoom controls and tracking controls for tracking either a boid (with `t`) or a nest (with `y`). There are also 3 slider controls that control parameters of the simulation, controlled with `[`, `]`, `;`, `'`, `,`, and `.`. There are also clouds that pan from left to right at different speeds.
+This demo implements a 2D boids simulation, with the inclusion of nests that the boids get attracted to. There are clouds that pan from left to right at different speeds.
+
+There are zoom controls and tracking controls for tracking either a boid (with `t`) or a nest (with `y`). There are also 3 slider controls that control parameters of the simulation, controlled with `[`, `]`, `;`, `'`, `,`, and `.`. You can toggle a mode to attract nearby boids with your mouse by clicking.
 
 ## Images
 
