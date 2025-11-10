@@ -103,7 +103,7 @@ App::App(const std::string& name, uint16_t width, uint16_t height)
 	std::vector<glm::vec3> colors = { {1,1,1}, {1,1,1}, {1,1,1}, {1,1,1} };
 	std::vector<glm::vec2> texCoords = { {0,0}, {1,0}, {1,1}, {0,1} };
 	std::vector<uint32_t> indices = { 0,1,2, 2,3,0 };
-
+	//
 	auto squareMesh = renderer->AddMesh("square", std::make_shared<Mesh>(vertices, colors, texCoords, indices));
 
 	Scene* scene = new BoidScene(renderer);
